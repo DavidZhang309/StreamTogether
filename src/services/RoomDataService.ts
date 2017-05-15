@@ -17,4 +17,20 @@ export class RoomDataService extends BaseDataService{
             });
         });
     }
+
+    /**
+     * Creates the room on database
+     * @param roomInfo Information on room
+     * 
+     * @returns The roomInfo with id
+     */
+    public createRoom(roomInfo): Promise<any> {
+        return this.connectToDB().then((db) => {
+            let rooms = db.collection('rooms');
+            return rooms.insertOne(roomInfo).then((result) =>{
+                roomInfo.id = result.insertedId.toHexString();
+                return roomInfo;
+            });
+        })
+    }
 }
