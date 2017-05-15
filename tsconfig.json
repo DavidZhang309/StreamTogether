@@ -3,6 +3,7 @@
         "src/index.ts"
     ],
     "compilerOptions": {
-        "outDir": "build/"
+        "outDir": "build/",
+        "lib": ["es2015"]
     }
 }
