@@ -1,0 +1,28 @@
+{
+  "name": "stream-together",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "scripts": {
+    "start": "tsc && node build/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DavidZhang309/StreamTogether.git"
+  },
+  "author": "David Zhang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DavidZhang309/StreamTogether/issues"
+  },
+  "homepage": "https://github.com/DavidZhang309/StreamTogether#readme",
+  "dependencies": {
+    "express": "^4.15.2",
+    "socket.io": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.0.35",
+    "@types/socket.io": "^1.4.29",
+    "typescript": "^2.3.2"
+  }
+}
