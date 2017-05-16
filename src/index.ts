@@ -4,15 +4,19 @@ import * as http from 'http';
 import * as sockets from 'socket.io';
 import * as config from './config';
 
-import { ClientManager } from './ClientManager';
+import { RoomManager } from './RoomManager';
+import { RoomController } from './RoomController';
 import { RoomRouter } from './middleware/RoomRouter';
 
 let app = express();
 let server = http.createServer(app);
 let socketIO = sockets(server);
 
-let clientMgr = new ClientManager(socketIO);
+let clientMgr = new RoomManager(socketIO);
 let roomRouter = new RoomRouter();
+roomRouter.on('roomRequest', (info) => {
+    clientMgr.makeRoom(info);
+});
 
 app.use(express_parser.json());
 app.use(express_parser.urlencoded());
