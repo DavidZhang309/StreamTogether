@@ -7,10 +7,9 @@ export class RoomDataService extends BaseDataService{
             let rooms = db.collection('rooms');
             return rooms.find({}).toArray().then((rooms) => {
                 return rooms.map((room) => {
-                    return <IRoomInfo>{
-                        id: room._id,
-                        name: room.name
-                    };
+                    room.id = room._id;
+                    delete room._id;
+                    return room;
                 })
             });
         });
@@ -22,10 +21,10 @@ export class RoomDataService extends BaseDataService{
             return <Promise<IRoomInfo>>rooms.findOne({
                 _id: new mongodb.ObjectID(id)
             }).then((room) => {
-                return {
-                    id: room._id,
-                    name: room.name
-                };
+                if (room == null) { return null };
+                room.id = room._id;
+                delete room._id;
+                return room
             });
         });
     }
@@ -40,9 +39,17 @@ export class RoomDataService extends BaseDataService{
         return this.connectToDB().then((db) => {
             let rooms = db.collection('rooms');
             return rooms.insertOne(roomInfo).then((result) =>{
-                console.log(result);
-                roomInfo.id = result.insertedId.toHexString();
+                roomInfo.id = roomInfo._id.toHexString();
+                delete roomInfo._id;
                 return <IRoomInfo>roomInfo;
+            });
+        })
+    }
+
+    public destroyRoom(roomInfo) {
+        return this.connectToDB().then((db) => {
+            db.collection('rooms').remove({
+                _id: roomInfo.id
             });
         })
     }
