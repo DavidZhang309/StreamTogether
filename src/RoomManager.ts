@@ -13,10 +13,10 @@ export class RoomManager extends EventEmitter {
         super();
         this.socketIO = socketIO;
         this.namespace = socketIO.of('/rooms');
-        this.namespace.on('connection', (socket) => { this.handleClient(socket); });
+        this.namespace.on('connect', (socket) => { this.handleClientEnter(socket); });
     }
 
-    protected handleClient(socket) {
+    protected handleClientEnter(socket) {
         socket.on('enter', (request, ackFn) => {
             this.service.getRoom(request.id).then((roomInfo) => {
                 if (roomInfo == null) { 
@@ -25,7 +25,9 @@ export class RoomManager extends EventEmitter {
                     });
                  } else {
                     socket.join(request.id);
-                    this.rooms[request.id].socketEnter(socket);
+                    let room = this.rooms[request.id];
+                    room.sockets.push(socket);
+                    room.room.socketEnter(socket);
                     ackFn({ });
                  }
             }).catch((err) => {
@@ -38,6 +40,9 @@ export class RoomManager extends EventEmitter {
     }
 
     public makeRoom(info: IRoomInfo) {
-        this.rooms[info.id] = new RoomController(this.socketIO.of('/rooms').in(info.id), info);
+        this.rooms[info.id] = {
+            room: new RoomController(this.socketIO.of('/rooms').in(info.id), info),
+            sockets: []
+        }
     }
 }

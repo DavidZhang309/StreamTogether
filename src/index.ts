@@ -8,16 +8,18 @@ import { RoomManager } from './RoomManager';
 import { RoomController } from './RoomController';
 import { RoomRouter } from './middleware/RoomRouter';
 
+// Initialize
 let app = express();
 let server = http.createServer(app);
 let socketIO = sockets(server);
 
-let clientMgr = new RoomManager(socketIO);
+let roomMgr = new RoomManager(socketIO);
 let roomRouter = new RoomRouter();
 roomRouter.on('roomRequest', (info) => {
-    clientMgr.makeRoom(info);
+    roomMgr.makeRoom(info);
 });
 
+// Set up routing
 app.use(express_parser.json());
 app.use(express_parser.urlencoded());
 
