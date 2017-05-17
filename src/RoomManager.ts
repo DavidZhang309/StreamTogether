@@ -54,4 +54,16 @@ export class RoomManager {
             return roomInfo;
         });
     }
+
+    public purgeRooms() {
+        this.service.getRoomList().then((rooms) => {
+            // TODO: filter out persistant rooms
+            let oldRooms = rooms;
+
+            // TODO: keep connection for efficiency
+            oldRooms.forEach((room) => {
+                this.service.destroyRoom(room);
+            })
+        })
+    }
 }

@@ -16,6 +16,8 @@ let socketIO = sockets(server);
 let roomMgr = new RoomManager(socketIO);
 let roomRouter = new RoomRouter(roomMgr);
 
+roomMgr.purgeRooms();
+
 // Set up routing
 app.use(express_parser.json());
 app.use(express_parser.urlencoded());
