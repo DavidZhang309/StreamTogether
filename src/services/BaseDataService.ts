@@ -9,7 +9,7 @@ export abstract class BaseDataService {
      */
     protected connectToDB(): Promise<Db>  {
         return new Promise<Db>((resolve, reject) => {
-            MongoClient.connect(config.devAppConfig.mongodb_connection, (err, db: Db) => {
+            MongoClient.connect(config.appConfig.mongodb_connection, (err, db: Db) => {
                 if (err) { reject(err) }
                 else { resolve(db) }
             })

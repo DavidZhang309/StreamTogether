@@ -22,7 +22,13 @@ app.use(express_parser.urlencoded());
 
 app.use('/api/room',roomRouter.router);
 app.use('/', express.static('build/client'));
+app.use(function(error: Error, request, response, next) { //error
+    response.statusCode = 500;
+    response.send({
+        error: config.appConfig.send_error_log ? error.message : "Unable to handle request"
+    });
+});
 
-server.listen(config.devAppConfig.port, () => {
+server.listen(config.appConfig.port, () => {
     console.log('Server started!');
 });
