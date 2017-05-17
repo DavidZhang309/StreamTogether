@@ -24,8 +24,7 @@ export class RoomManager {
                  } else {
                     socket.join(request.id);
                     let room = this.rooms[request.id];
-                    room.sockets.push(socket);
-                    room.room.socketEnter(socket);
+                    room.socketEnter(socket);
                     ackFn({ });
                  }
             }).catch((err) => {
@@ -51,10 +50,7 @@ export class RoomManager {
 
     public makeRoom(info: IRoomInfo): Promise<IRoomInfo> {
         return this.service.createRoom(info).then((roomInfo) => {
-            this.rooms[info.id] = {
-                room: new RoomController(this.socketIO.of('/rooms').in(info.id), info),
-                sockets: []
-            }
+            this.rooms[info.id] = new RoomController(this.socketIO.of('/rooms').in(info.id), info)
             return roomInfo;
         });
     }
