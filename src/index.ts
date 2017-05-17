@@ -14,10 +14,7 @@ let server = http.createServer(app);
 let socketIO = sockets(server);
 
 let roomMgr = new RoomManager(socketIO);
-let roomRouter = new RoomRouter();
-roomRouter.on('roomRequest', (info) => {
-    roomMgr.makeRoom(info);
-});
+let roomRouter = new RoomRouter(roomMgr);
 
 // Set up routing
 app.use(express_parser.json());

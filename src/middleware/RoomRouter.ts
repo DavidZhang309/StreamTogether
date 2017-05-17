@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { EventEmitter } from 'events';
-import { RoomDataService, IRoomInfo } from '../services/RoomDataService';
+import { IRoomInfo } from '../services/RoomDataService';
+import { RoomManager } from '../RoomManager'; 
 
-export class RoomRouter extends EventEmitter {
-    service = new RoomDataService();
+export class RoomRouter {
+    roomMgr: RoomManager
     router = Router();
 
-    public constructor() {
-        super();
+    public constructor(roomManager: RoomManager) {
+        this.roomMgr = roomManager;
 
         this.router.get('/list', (request, response, next) => { 
             this.getRoomList(request, response, next) 
@@ -18,9 +18,9 @@ export class RoomRouter extends EventEmitter {
     }
 
     public getRoomList(request, response, next) {
-        this.service.getRoomList().then((roomList) => {
+        this.roomMgr.getRoomList().then((rooms) => {
             response.send({
-                result: roomList
+                result: rooms
             });
         }).catch((err) => {
             next(err);
@@ -28,22 +28,20 @@ export class RoomRouter extends EventEmitter {
     }
 
     /**
-     * createRoom
+     * 
      */
     public createRoom(request, response, next) {
         //Gather room information
-        let roomInfo = {
+        let roomParam = <IRoomInfo>{
             name: request.body.name
         }
 
-        // create room
-        this.service.createRoom(roomInfo).then((info) => {
-            this.emit('roomRequest', info);
+        this.roomMgr.makeRoom(roomParam).then((result) =>{
             response.send({
-                result: info
+                result: result
             });
-        }).catch((err) => { 
-            next(err); 
+        }).catch((err) => {
+            next(err);  
         });
     }
 }

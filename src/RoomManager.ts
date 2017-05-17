@@ -1,16 +1,14 @@
-import { EventEmitter } from 'events';
 import * as sockets from 'socket.io';
 import { RoomDataService, IRoomInfo } from './services/RoomDataService'
 import { RoomController } from './RoomController';
 
-export class RoomManager extends EventEmitter {
+export class RoomManager {
     service = new RoomDataService();
     socketIO;
     namespace;
     rooms:any = { };
 
     public constructor(socketIO) {
-        super();
         this.socketIO = socketIO;
         this.namespace = socketIO.of('/rooms');
         this.namespace.on('connect', (socket) => { this.handleClientEnter(socket); });
@@ -39,10 +37,25 @@ export class RoomManager extends EventEmitter {
         });
     }
 
-    public makeRoom(info: IRoomInfo) {
-        this.rooms[info.id] = {
-            room: new RoomController(this.socketIO.of('/rooms').in(info.id), info),
-            sockets: []
-        }
+    
+    public getRoomList(): Promise<IRoomInfo[]> {
+        return this.service.getRoomList().then((roomList) => {
+            return roomList.map((room) => { 
+                return <IRoomInfo>{
+                    id: room.id,
+                    name: room.name
+                }
+            })
+        });
+    }
+
+    public makeRoom(info: IRoomInfo): Promise<IRoomInfo> {
+        return this.service.createRoom(info).then((roomInfo) => {
+            this.rooms[info.id] = {
+                room: new RoomController(this.socketIO.of('/rooms').in(info.id), info),
+                sockets: []
+            }
+            return roomInfo;
+        });
     }
 }
