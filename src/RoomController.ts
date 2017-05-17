@@ -13,7 +13,7 @@ export class RoomController {
     }
 
     public socketEnter(socket) {
-        socket.on('join', (joinInfo) => {
+        socket.on('join', (joinInfo, ackFn) => {
             // Authenticate client
             let user = {
                 socket: socket,
@@ -25,9 +25,11 @@ export class RoomController {
 
             // Bind events
             socket.on('text', (text) => {
-                console.log(text);
-                this.room.emit('text', user.name + " said: " + text);
+                this.room.emit('text', user.name + ": " + text);
             });
+
+            // send result
+            ackFn({}); // Success
         });
     }
 }
