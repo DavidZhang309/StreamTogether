@@ -4,28 +4,39 @@ import { RoomController } from './RoomController';
 
 export class RoomManager {
     service = new RoomDataService();
-    socketIO;
-    namespace;
+    namespace: any;
     rooms:any = { };
 
     public constructor(socketIO) {
-        this.socketIO = socketIO;
         this.namespace = socketIO.of('/rooms');
         this.namespace.on('connect', (socket) => { this.handleClientEnter(socket); });
     }
 
     protected handleClientEnter(socket) {
-        socket.on('enter', (request, ackFn) => {
+        let room: RoomController = null; // single room only (per socket)
+        socket.on('join', (request, ackFn) => {
+            if (room != null) {
+                ackFn({ 
+                    error: 'only 1 room per connection' 
+                });
+                return;
+            }
             this.service.getRoom(request.id).then((roomInfo) => {
                 if (roomInfo == null) { 
                     ackFn({ 
                         error: 'room does not exist' 
                     });
                  } else {
-                    socket.join(request.id);
-                    let room = this.rooms[request.id];
-                    room.socketEnter(socket);
-                    ackFn({ });
+                    let joinRoom: RoomController = this.rooms[request.id];
+                    joinRoom.verifyUser(request).then(() => {
+                        room = joinRoom;
+                        socket.join(request.id, () => {
+                            room.clientJoin(socket, request, ackFn);
+                        });
+                    }).catch((err) =>{
+                        console.log(err);
+                        ackFn({ error: 'join failed: ' + err.message })
+                    })
                  }
             }).catch((err) => {
                 console.log(err);
@@ -33,6 +44,18 @@ export class RoomManager {
                     error: 'server unable to handle request'
                 });
             });
+        });
+
+        socket.on('disconnect', () => {
+            if (room != null) { room.clientLeave(socket); }
+        });
+
+        socket.on('leave', () => {
+            if (room != null) {
+                socket.leave(room.roomInfo.id);
+                room.clientLeave(socket);
+                room = null;
+            }
         });
     }
 
@@ -50,7 +73,7 @@ export class RoomManager {
 
     public makeRoom(info: IRoomInfo): Promise<IRoomInfo> {
         return this.service.createRoom(info).then((roomInfo) => {
-            this.rooms[info.id] = new RoomController(this.socketIO.of('/rooms').in(info.id), info)
+            this.rooms[info.id] = new RoomController(this.namespace, info)
             return roomInfo;
         });
     }
