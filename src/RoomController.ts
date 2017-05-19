@@ -6,6 +6,7 @@ export class RoomController {
     users: any = { }; //[string] => userinfo
     host: IUserInfo = null;
     chatHistory: IChatText[] = [];
+    currentStreamInfo: IStreamStatus = null;
     roomInfo: IRoomInfo;
     namespace: any;
     
@@ -91,6 +92,56 @@ export class RoomController {
             this.getRoom().in(this.roomInfo.id).emit('text', user.name + ": " + text);
         });
 
+        socket.on('queue', (url) => {
+            //TODO: attempt to get metadata
+
+        });
+
+        //host events
+        socket.on('stream', (url) => {
+            if (user.name != this.host.name) { 
+                ackFn({ error: 'You are not host.' }); 
+                return 
+            }
+            
+            this.currentStreamInfo = <IStreamStatus>{
+                currentStream: <IStreamItem>{
+                    url: url
+                },
+                isPlaying: false,
+                lastPlay: null,
+                lastPlayTime: 0
+            }
+
+            this.getRoom().emit('stream', this.currentStreamInfo.currentStream);
+        });
+        socket.on('play', (offset, time) => {
+            if (user.name != this.host.name) { 
+                ackFn({ error: 'You are not host.' }); 
+                return 
+            }
+            this.currentStreamInfo.isPlaying = true;
+            this.currentStreamInfo.lastPlay = time;
+            this.currentStreamInfo.lastPlayTime = offset;
+            socket.in(this.roomInfo.id).emit('play', {
+                offset: offset,
+                time: time
+            });
+        });
+        socket.on('pause', (offset, time) => {
+            if (user.name != this.host.name) { 
+                ackFn({ error: 'You are not host.' }); 
+                return  
+            }
+            this.currentStreamInfo.isPlaying = false;
+            this.currentStreamInfo.lastPlay = time;
+            this.currentStreamInfo.lastPlayTime = offset;
+            socket.in(this.roomInfo.id).emit('pause', {
+                offset: offset,
+                time: time
+            });
+        })
+
         // sync room
         ackFn({ 
             chat: this.chatHistory,
@@ -119,6 +170,12 @@ export interface IChatText {
 }
 
 export interface IStreamItem {
-    user: string;
     url: string;
+}
+
+export interface IStreamStatus {
+    currentStream: IStreamItem;
+    isPlaying: boolean;
+    lastPlay: Date;
+    lastPlayTime: number;
 }
