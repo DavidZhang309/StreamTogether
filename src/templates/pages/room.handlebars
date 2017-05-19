@@ -1,0 +1,157 @@
+<main class="container">
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            <div id="play-area" class="blank" style="">
+                <video id="video-player" controls=""></video>
+            </div>
+            <div class="input-group hidden">
+                <span class="input-group-addon">url:</span>
+                <input id="url" class="form-control">
+                <span class="input-group-btn">
+                    <button id="load-url" class="btn btn-default">Load</button>
+                </span>
+            </div>
+        </div>
+        <div class="col-sm-0 col-md-4">
+            <div class="chat"></div>
+        </div>
+    </div>
+    <ul class="nav nav-tabs">
+        <li><a href="#">Queue</a></li>
+        <li><a href="#">History</a></li>
+        <li class="active"><a href="#">Users</a></li>
+    </ul>
+    <div class="users">
+        
+    </div>
+</main>
+
+{{#footer_script}}
+<script>
+    var name = "Bob";
+    var isHost = false;
+    var isSynced = false;
+    var socket = io.connect('/rooms');
+    socket.on('text', function(msg) {
+        $('.chat').append($(document.createElement('div')).text(msg));
+    });
+    socket.on('users', function(users) {
+        var $users = $('.users');
+        $users.html('');
+        $.each(users, function(index, user) {
+            $users.append($(document.createElement('div')).text(user));
+        });
+    });
+    
+    socket.on('host', function(hostInfo) {
+        if (hostInfo.is_host) { 
+            console.log('This client is now the host'); 
+            isHost = true;
+            $("#url").parent().removeClass('hidden');
+        } else {
+            $("#url").parent().removeClass('hidden');
+        }
+        $('.chat').append($(document.createElement('div')).text(hostInfo.name + " is now host"));
+    })
+
+    function getPlayTime(time, offset) {
+        var date = new Date();
+        date.setTime(time);
+        var now = new Date();
+        return (now.getTime() - date.getTime()) / 1000 + offset;
+    }
+
+    function joinRoom(info) {
+        socket.emit('join', { id: info.id, name: name }, function(result) {
+            if (result.error) { console.log(result.error) }
+            else { 
+                console.log('joined room');
+            }
+        })
+    }
+
+    function leaveRoom() {
+        socket.emit('leave');
+        $('.chat, .users').html('');
+    }
+
+    function chat(text) {
+        socket.emit('text', text);
+    }
+
+    function createRoom() {
+        $.post({
+            url: '/api/room/create',
+            data: { name: 'test server 3' },
+            dataType: 'json'
+        }).done(function (data) {
+            console.log(data.result.id);
+            joinRoom(data.result);
+        });
+    }
+
+    $(document).ready(function() {
+        joinRoom({
+            id: window.location.hash.substr(1)
+        });
+
+        var video = document.getElementById('video-player');
+        video.addEventListener('seeking', function(){
+            if (isHost) {
+                socket.emit(video.paused ? 'pause' : 'play', video.currentTime, new Date().getTime());
+            } else {
+                //TODO: off sync state
+            }
+        });
+        video.addEventListener('play', function(){
+            if (isHost) {
+                socket.emit('play', video.currentTime, new Date().getTime());
+            } else {
+                //TODO: off sync state
+            }
+        })
+        video.addEventListener('pause', function(){
+            if (isHost) {
+                socket.emit('pause', video.currentTime, new Date().getTime());
+            } else {
+                //TODO: off sync state
+            }
+        })
+
+        socket.on('stream', function(result) { 
+            if (result.error) { console.log(result.error) }
+            // load url
+            video.innerHTML = "";
+            var src = document.createElement('source');
+            src.setAttribute('src', result.url);
+            video.appendChild(src);
+        });
+        socket.on('play', function(result) { 
+            if (result.error) { console.log(result.error) }
+            
+            video.currentTime = getPlayTime(result.time, result.offset);
+            video.play();
+        });
+        socket.on('pause', function(result) { 
+            if (result.error) { console.log(result.error) }
+            
+            video.currentTime = getPlayTime(result.time, result.offset);
+            video.pause();
+        });
+    }).on('click', '#load-url', function() {
+        var url = $('#url').val();
+        console.log(url)
+        
+        socket.emit('stream', url);
+
+        var area = document.getElementById('play-area');
+        area.classList.remove('blank');
+
+        var video = document.getElementById('video-player');
+        video.innerHTML = "";
+        var src = document.createElement('source');
+        src.setAttribute('src', url);
+        video.appendChild(src);
+    });
+</script>
+{{/footer_script}}

@@ -1,11 +1,20 @@
 import { Router } from 'express';
+import { RoomManager } from '../RoomManager';
 
 export class RoomPrototypeRouter {
     router = Router();
+    roomMgr: RoomManager;
 
-    public constructor() {
+    public constructor(roomMgr: RoomManager) {
+        this.roomMgr = roomMgr;
+
         this.router.get('/', (request, response, next) => {
-            response.render('pages/prototype');
+            this.roomMgr.getRoomList().then((rooms) => {
+                response.render('pages/list', { rooms: rooms });
+            });
+        });
+        this.router.get('/room', (request, response, next) => {
+            response.render('pages/room');
         });
     }
 }

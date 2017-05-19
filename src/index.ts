@@ -17,7 +17,7 @@ let socketIO = sockets(server);
 
 let roomMgr = new RoomManager(socketIO);
 let roomRouter = new RoomRouter(roomMgr);
-let prototypeRouter = new RoomPrototypeRouter();
+let prototypeRouter = new RoomPrototypeRouter(roomMgr);
 
 roomMgr.purgeRooms();
 
