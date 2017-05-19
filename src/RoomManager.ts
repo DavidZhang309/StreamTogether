@@ -62,10 +62,12 @@ export class RoomManager {
     
     public getRoomList(): Promise<IRoomInfo[]> {
         return this.service.getRoomList().then((roomList) => {
-            return roomList.map((room) => { 
+            return roomList.map((roomInfo) => { 
+                let room: RoomController = this.rooms[roomInfo.id];
                 return <IRoomInfo>{
-                    id: room.id,
-                    name: room.name
+                    id: roomInfo.id,
+                    name: roomInfo.name,
+                    user_count: Object.keys(room.users).length
                 }
             })
         });

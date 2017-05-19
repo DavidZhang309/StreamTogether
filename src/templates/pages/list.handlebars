@@ -1,7 +1,15 @@
 <main class="container">
+    <h3>Room List</h3>
     {{#each rooms}}
-    <div class="">
-        <a href="/prototype/room#{{id}}">{{name}}</a>
+    <div class="div-entry">
+        <div class="row">
+            <div class="col-xs-6">
+                <a href="/prototype/room#{{id}}">{{name}}</a>
+            </div>
+            <div class="col-xs-6" style="text-align: right;">
+                {{user_count}} watching
+            </div>
+        </div>
     </div>
     {{/each}}
 </main>
