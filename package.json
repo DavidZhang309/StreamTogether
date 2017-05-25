@@ -4,7 +4,9 @@
   "description": "",
   "main": "build/index.js",
   "scripts": {
-    "start": "tsc && node build/index.js"
+    "postinstall": "tsc",
+    "start": "node build/index.js",
+    "dev-start": "tsc && node build/index.js"
   },
   "repository": {
     "type": "git",
