@@ -1,9 +1,9 @@
 {
     "files": [
-        "src/index.ts"
+        "src/server/index.ts"
     ],
     "compilerOptions": {
-        "outDir": "build/",
+        "outDir": "build/server/",
         "lib": ["es2015"]
     }
 }

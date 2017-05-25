@@ -24,8 +24,8 @@ roomMgr.purgeRooms();
 // Set up handlebars for rendering prototype 
 app.engine('handlebars', express_handlebars({ 
     defaultLayout: 'main', 
-    layoutsDir: './src/templates/layouts/', 
-    partialsDir: './src/templates/partials/', 
+    layoutsDir: './src/server/templates/layouts/', 
+    partialsDir: './src/server/templates/partials/', 
     helpers: { 
         footer_script: function(options) { 
             this._footer_scripts = options.fn(this); 
@@ -36,7 +36,7 @@ app.engine('handlebars', express_handlebars({
         } 
     } 
 })); 
-app.set('views', './src/templates'); 
+app.set('views', './src/server/templates'); 
 app.set('view engine', 'handlebars'); 
 
 // Set up routing
