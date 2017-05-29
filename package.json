@@ -4,7 +4,7 @@
   "description": "",
   "main": "build/index.js",
   "scripts": {
-    "postinstall": "tsc --project ./src/server/tsconfig.json && webpack --config webpack.config.js && gulp",
+    "postinstall": "bower install && tsc --project ./src/server/tsconfig.json && webpack --config webpack.config.js && gulp",
     "start": "node build/server/index.js",
     "build-client": "webpack --config webpack.config.js && gulp",
     "dev-start": "tsc --project ./src/server/tsconfig.json && node build/server/index.js"
