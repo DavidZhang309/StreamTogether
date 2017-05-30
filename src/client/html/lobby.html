@@ -3,12 +3,16 @@
         <div class="col-md-push-3 col-md-6">
             <section class="roomList">
                 <h3>Room List <button (click)="refreshRoomList()" class="btn btn-default refresh">Refresh</button></h3>
-                <div class="room-listing" *ngFor="let room of roomList">
-                    <div class="row">
-                        <div class="col-xs-6 room-name">{{room.name}}</div>
-                        <div class="col-xs-6 room-viewer-count">{{room.user_count}} watching</div>
-                    </div>
-                </div>
+                <article *ngFor="let room of roomList">
+                    <a routerLink="/room/{{room.id}}">
+                        <div class="room-listing">
+                            <div class="row">
+                                <div class="col-xs-6 room-name">{{room.name}}</div>
+                                <div class="col-xs-6 room-viewer-count">{{room.user_count}} watching</div>
+                            </div>
+                        </div>
+                    </a>
+                </article>
             </section>
         </div>
     </div>
