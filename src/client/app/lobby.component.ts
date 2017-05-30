@@ -15,6 +15,10 @@ export class LobbyComponent implements OnInit {
     public constructor(private lobbySvc: LobbyService) { }
 
     public ngOnInit() {
+        this.refreshRoomList();
+    }
+
+    public refreshRoomList() {
         this.lobbySvc.getRoomList().then((rooms) => {
             this.roomList = rooms;
         });
