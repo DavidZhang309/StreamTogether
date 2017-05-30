@@ -3,7 +3,7 @@ var htmlmin = require('gulp-htmlmin');
 
 gulp.task('html', function() {
     return gulp.src('./src/client/html/**/*.html')
-        .pipe(htmlmin({collapseWhitespace: true}))
+        .pipe(htmlmin({collapseWhitespace: true, caseSensitive: true}))
         .pipe(gulp.dest('./build/client/'))
 });
 
