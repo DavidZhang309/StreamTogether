@@ -1,4 +1,4 @@
-import { Room } from './room';
+import { RoomInfo } from './room';
 import { LobbyService } from './lobby.service';
 import { Component, OnInit } from '@angular/core';
 
@@ -10,7 +10,7 @@ import { Component, OnInit } from '@angular/core';
     templateUrl: '/lobby.html'
 })
 export class LobbyComponent implements OnInit { 
-    roomList: Room[];
+    roomList: RoomInfo[];
 
     public constructor(private lobbySvc: LobbyService) { }
 

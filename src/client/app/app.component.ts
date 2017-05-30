@@ -1,5 +1,3 @@
-import { Room } from './room';
-import { LobbyService } from './lobby.service';
 import { Component, OnInit } from '@angular/core';
 
 @Component({
