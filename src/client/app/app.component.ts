@@ -1,7 +1,11 @@
-import { Component } from '@angular/core';
+import { Room } from './room';
+import { LobbyService } from './lobby.service';
+import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'my-app',
-  templateUrl: '/app/app.html'
+    selector: 'my-app',
+    templateUrl: '/app.html'
 })
-export class AppComponent  { name = 'Angular'; }
+export class AppComponent { 
+
+}
