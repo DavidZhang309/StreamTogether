@@ -1,0 +1,23 @@
+.room-listing {
+    .room-name {
+        font-weight: bold;
+    }
+    .room-viewer-count {
+        text-align: right;
+    }
+
+    padding: 10px;
+    margin: 5px 0;
+    border: solid 1px #aaa;
+    cursor: pointer;
+}
+
+.room-listing:hover {
+    background-color: #ccc;
+}
+
+lobby {
+    .refresh { 
+        float: right; 
+    }
+}
