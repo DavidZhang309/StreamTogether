@@ -2,7 +2,12 @@
     <div class="row">
         <div class="col-md-push-3 col-md-6">
             <section class="roomList">
-                <h3>Room List <button (click)="refreshRoomList()" class="btn btn-default refresh">Refresh</button></h3>
+                <h3>Room List 
+                    <div class="room-options">
+                        <button (click)="refreshRoomList()" class="btn btn-default refresh">Refresh</button>
+                        <button class="btn btn-default" data-toggle="modal" data-target="#create-room">Create</button>
+                    </div>
+                </h3>
                 <article *ngFor="let room of roomList">
                     <a routerLink="/room/{{room.id}}">
                         <div class="room-listing">
@@ -17,3 +22,14 @@
         </div>
     </div>
 </main>
+
+<div id="create-room" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">Create Room</div>
+            <div class="modal-body">
+                <room-form>
+            </div>
+        </div>
+    </div>
+</div>
