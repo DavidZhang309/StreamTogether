@@ -8,11 +8,11 @@ import { LobbyComponent } from './lobby.component';
 import { RoomComponent } from './room.component';
 
 @NgModule({
-    imports:      [ 
+    imports: [ 
         BrowserModule,
         HttpModule,
         RouterModule.forRoot([
-            { path: '', redirectTo: '/lobby', pathMatch: 'full' },
+            { path: '', redirectTo: 'lobby', pathMatch: 'full' },
             {
                 path: 'lobby',
                 component: LobbyComponent
@@ -23,8 +23,14 @@ import { RoomComponent } from './room.component';
             }
         ])
     ],
-    declarations: [ AppComponent, LobbyComponent, RoomComponent ],
-    bootstrap:    [ AppComponent ]
+    declarations: [ 
+        AppComponent, 
+        LobbyComponent, 
+        RoomComponent 
+    ],
+    bootstrap:    [ 
+        AppComponent 
+    ]
 })
 export class AppModule { }
 

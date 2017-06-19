@@ -2,6 +2,7 @@ import * as express from 'express';
 import * as express_parser from 'body-parser';
 import * as express_handlebars from 'express-handlebars';
 import * as http from 'http';
+import * as path from 'path';
 import * as sockets from 'socket.io';
 import * as config from './config';
 
@@ -47,7 +48,15 @@ app.use('/api/room', roomRouter.router);
 if (config.appConfig.enable_prototype) {
     app.use('/prototype', prototypeRouter.router);
 }
+
+app.use('/app', (request, response) => {
+    response.sendFile(path.resolve('./build/client/app/index.html'));
+});
 app.use('/', express.static('build/client'));
+app.use('/', (request, response) =>{ // When no static served, redirect to app page
+    response.redirect('/app');
+});
+
 app.use(function(error: Error, request, response, next) { //error
     response.statusCode = 500;
     response.send({

@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core';
         LobbyService, 
     ],
     selector: 'lobby',
-    templateUrl: '/lobby.html'
+    templateUrl: '/components/lobby.html'
 })
 export class LobbyComponent implements OnInit { 
     roomList: RoomInfo[];
