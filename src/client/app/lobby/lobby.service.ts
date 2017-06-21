@@ -1,4 +1,4 @@
-import { RoomInfo } from './room';
+import { RoomInfo } from '../room/room';
 
 import { Injectable } from '@angular/core';
 import { Http, Response } from '@angular/http';

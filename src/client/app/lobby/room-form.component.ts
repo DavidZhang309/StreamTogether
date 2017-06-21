@@ -2,14 +2,14 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { LobbyService } from './lobby.service';
-import { RoomInfo } from './room';
+import { RoomInfo } from '../room/room';
 
 @Component({
     providers: [
         LobbyService, 
     ],
     selector: 'room-form',
-    templateUrl: '/components/room-form.html'
+    templateUrl: '/components/lobby/room-form.html'
 })
 export class RoomFormComponent {
     room = new RoomInfo();

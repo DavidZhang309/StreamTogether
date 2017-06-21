@@ -5,9 +5,9 @@ import { HttpModule } from '@angular/http';
 import { RouterModule } from '@angular/router';
 
 import { AppComponent } from './app.component';
-import { LobbyComponent } from './lobby.component';
-import { RoomFormComponent } from './room-form.component';
-import { RoomComponent } from './room.component';
+import { LobbyComponent } from './lobby/lobby.component';
+import { RoomFormComponent } from './lobby/room-form.component';
+import { RoomComponent } from './room/room.component';
 
 @NgModule({
     imports: [ 

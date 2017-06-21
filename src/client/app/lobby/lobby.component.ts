@@ -1,4 +1,4 @@
-import { RoomInfo } from './room';
+import { RoomInfo } from '../room/room';
 import { LobbyService } from './lobby.service';
 import { Component, OnInit } from '@angular/core';
 
@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core';
         LobbyService, 
     ],
     selector: 'lobby',
-    templateUrl: '/components/lobby.html'
+    templateUrl: '/components/lobby/lobby.html'
 })
 export class LobbyComponent implements OnInit { 
     roomList: RoomInfo[];
