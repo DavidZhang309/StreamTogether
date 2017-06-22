@@ -8,6 +8,7 @@ import { AppComponent } from './app.component';
 import { LobbyComponent } from './lobby/lobby.component';
 import { RoomFormComponent } from './lobby/room-form.component';
 import { RoomComponent } from './room/room.component';
+import { GuestInfoComponent } from './user/guest-info.component';
 
 @NgModule({
     imports: [ 
@@ -25,6 +26,9 @@ import { RoomComponent } from './room/room.component';
             }, {
                 path: 'room/:id',
                 component: RoomComponent
+            }, {
+                path: 'guest/profile',
+                component: GuestInfoComponent
             }
         ])
     ],
@@ -32,10 +36,11 @@ import { RoomComponent } from './room/room.component';
         AppComponent, 
         LobbyComponent, 
         RoomFormComponent, 
-        RoomComponent 
+        RoomComponent ,
+        GuestInfoComponent
     ],
-    bootstrap:    [ 
-        AppComponent 
+    bootstrap: [ 
+        AppComponent
     ]
 })
 export class AppModule { }

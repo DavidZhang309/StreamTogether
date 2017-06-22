@@ -1,0 +1,9 @@
+<main class="container">
+    <form (ngSubmit)="changeName()">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input [(ngModel)]="name" name="name" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-default">Change Name</button>
+    </form>
+</main>
