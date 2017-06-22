@@ -1,5 +1,6 @@
 <main class="container">
     <a routerLink="/lobby" class="btn btn-default">Back to lobby</a>
+    <button *ngIf='inSync==false' class="btn btn-default">Sync</button>
     <div class="row">
         <div class="col-sm-12 col-md-8">
             <div id="play-area" class="blank" style="">
@@ -12,17 +13,38 @@
                     <button id="load-url" class="btn btn-default">Load</button>
                 </span>
             </div>
+            <div *ngIf="tab == 'queue'">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a (click)="switchTab('queue')">Queue</a></li>
+                    <li><a (click)="switchTab('history')">History</a></li>
+                    <li><a (click)="switchTab('users')">Users</a></li>
+                </ul>
+            </div>
+            <div *ngIf="tab == 'history'">
+                <ul class="nav nav-tabs">
+                    <li><a (click)="switchTab('queue')">Queue</a></li>
+                    <li class="active"><a (click)="switchTab('history')">History</a></li>
+                    <li><a (click)="switchTab('users')">Users</a></li>
+                </ul>
+            </div>
+            <div *ngIf="tab == 'users'">
+                <ul class="nav nav-tabs">
+                    <li><a (click)="switchTab('queue')">Queue</a></li>
+                    <li><a (click)="switchTab('history')">History</a></li>
+                    <li class="active"><a (click)="switchTab('users')">Users</a></li>
+                </ul>
+                <div class="users">
+                    <div *ngFor="let username of users | async">{{username}}</div>
+                </div>
+            </div>
         </div>
         <div class="col-sm-0 col-md-4">
-            <div class="chat"></div>
+            <div class="chat">
+                <div *ngFor="let entry of chat | async">
+                    <div><b>{{entry.user}}</b>: {{entry.message}}</div>
+                    <div></div>
+                </div>
+            </div>
         </div>
-    </div>
-    <ul class="nav nav-tabs">
-        <li><a href="#">Queue</a></li>
-        <li><a href="#">History</a></li>
-        <li class="active"><a href="#">Users</a></li>
-    </ul>
-    <div class="users">
-        
     </div>
 </main>

@@ -12,10 +12,26 @@ import 'rxjs/add/operator/toPromise';
 export class RoomService {
     private socket: SocketIOClient.Socket;
     private events: { [event:string]: Subject<any> };
+    private stateSubjects: {
+        users: BehaviorSubject<string[]>,
+        chat: BehaviorSubject<IChatEntry[]>,
+    }
+    private stateData: { 
+        users: string[],
+        chat: IChatEntry[]
+    };
 
     public constructor() {
         this.socket = io.connect('/rooms');
         this.events = { }
+        this.stateSubjects = {
+            users: new BehaviorSubject([]),
+            chat: new BehaviorSubject([])
+        }
+        this.stateData = {
+            users: [],
+            chat: []
+        }
     }
 
     // 
@@ -23,16 +39,6 @@ export class RoomService {
         if (this.events[event] != null) {
             this.events[event].next(data);
         }
-    }
-
-    //
-    public enterRoom(info: JoinInfo): Promise<IJoinResult> {
-        return new Promise<IJoinResult>((resolve, reject) => {
-            this.socket.emit('join', info, (result: IJoinResult) => {
-                if (result.error != null) { reject(result) }
-                resolve(result)
-            });
-        })
     }
 
     public getEvent(event: string): Observable<any> {
@@ -48,6 +54,26 @@ export class RoomService {
         // store and return observer
         this.events[event] = subject;
         return subject.asObservable();
+    }
+
+    public getChat(): Observable<IChatEntry[]> {
+        return this.stateSubjects.chat.asObservable();
+    }
+
+    public getUsers(): Observable<string[]> {
+        return this.stateSubjects.users.asObservable();
+    }
+
+    //
+    public enterRoom(info: JoinInfo): Promise<IJoinResult> {
+        return new Promise<IJoinResult>((resolve, reject) => {
+            this.socket.emit('join', info, (result: IJoinResult) => {
+                if (result.error != null) { reject(result) }
+                this.stateSubjects.users.next(result.users);
+                this.stateSubjects.chat.next(result.chat);
+                resolve(result);
+            });
+        })
     }
 
     public leaveRoom() {
@@ -67,6 +93,12 @@ interface JoinInfo {
 
 interface IJoinResult {
     error: string;
-    chat: string[];
+    chat: IChatEntry[];
     users: string[];
+}
+
+export interface IChatEntry {
+    user: string,
+    message: string;
+    time: string;
 }
