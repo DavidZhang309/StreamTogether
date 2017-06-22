@@ -1,8 +1,8 @@
 <main class="container">
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <div id="play-area" class="blank" style="">
-                <video id="video-player" controls=""></video>
+            <div id="play-area" class="blank" style="width: 100%;">
+                <video id="video-player" controls="" style="width: 100%;"></video>
             </div>
             <div class="input-group hidden">
                 <span class="input-group-addon">url:</span>
@@ -32,10 +32,11 @@
     var isHost = false;
     var isSynced = false;
     var socket = io.connect('/rooms');
-    socket.on('text', function(msg) {
-        $('.chat').append($(document.createElement('div')).text(msg));
+    socket.on('text', function(response) {
+        $('.chat').append($(document.createElement('div')).text(response.result));
     });
-    socket.on('users', function(users) {
+    socket.on('users', function(response) {
+        var users = response.result;
         var $users = $('.users');
         $users.html('');
         $.each(users, function(index, user) {
@@ -43,7 +44,8 @@
         });
     });
     
-    socket.on('host', function(hostInfo) {
+    socket.on('host', function(response) {
+        var hostInfo = response.result;
         if (hostInfo.is_host) { 
             console.log('This client is now the host'); 
             isHost = true;
@@ -118,24 +120,24 @@
             }
         })
 
-        socket.on('stream', function(result) { 
-            if (result.error) { console.log(result.error) }
+        socket.on('stream', function(response) { 
+            if (response.error) { console.log(response.error) }
             // load url
             video.innerHTML = "";
             var src = document.createElement('source');
-            src.setAttribute('src', result.url);
+            src.setAttribute('src', response.result.url);
             video.appendChild(src);
         });
-        socket.on('play', function(result) { 
-            if (result.error) { console.log(result.error) }
+        socket.on('play', function(response) { 
+            if (response.error) { console.log(response.error) }
             
-            video.currentTime = getPlayTime(result.time, result.offset);
+            video.currentTime = getPlayTime(response.result.time, response.result.offset);
             video.play();
         });
-        socket.on('pause', function(result) { 
-            if (result.error) { console.log(result.error) }
+        socket.on('pause', function(response) { 
+            if (response.error) { console.log(response.error) }
             
-            video.currentTime = getPlayTime(result.time, result.offset);
+            video.currentTime = getPlayTime(response.result.time, response.result.offset);
             video.pause();
         });
     }).on('click', '#load-url', function() {
