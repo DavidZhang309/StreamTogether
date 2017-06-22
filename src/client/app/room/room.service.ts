@@ -11,49 +11,32 @@ import 'rxjs/add/operator/toPromise';
 @Injectable()
 export class RoomService {
     private socket: SocketIOClient.Socket;
-    private events: { [event:string]: Subject<any> };
+
     private stateSubjects: {
         users: BehaviorSubject<string[]>,
         chat: BehaviorSubject<IChatEntry[]>,
+        isHost: BehaviorSubject<boolean>,
+        stream: Subject<IStreamStatus>
     }
     private stateData: { 
         users: string[],
-        chat: IChatEntry[]
+        chat: IChatEntry[],
+        stream: IStreamStatus
     };
 
     public constructor() {
         this.socket = io.connect('/rooms');
-        this.events = { }
         this.stateSubjects = {
             users: new BehaviorSubject([]),
-            chat: new BehaviorSubject([])
+            chat: new BehaviorSubject([]),
+            isHost: new BehaviorSubject(false),
+            stream: new Subject()
         }
         this.stateData = {
             users: [],
-            chat: []
+            chat: [],
+            stream: null
         }
-    }
-
-    // 
-    protected pushEvent(event: string, data: any) {
-        if (this.events[event] != null) {
-            this.events[event].next(data);
-        }
-    }
-
-    public getEvent(event: string): Observable<any> {
-        let subject = this.events[event];
-        if (subject == null) {
-            subject = new Subject<any>();
-        }
-
-        this.socket.on(event, (response: ISocketResponse) => {
-            subject.next(response.result);
-        })
-
-        // store and return observer
-        this.events[event] = subject;
-        return subject.asObservable();
     }
 
     public getChat(): Observable<IChatEntry[]> {
@@ -64,20 +47,60 @@ export class RoomService {
         return this.stateSubjects.users.asObservable();
     }
 
+    public isHost(): Observable<boolean> {
+        return this.stateSubjects.isHost.asObservable();
+    }
+
+    public getStream(): Observable<IStreamStatus> {
+        return this.stateSubjects.stream.asObservable();
+    }
+
     //
-    public enterRoom(info: JoinInfo): Promise<IJoinResult> {
-        return new Promise<IJoinResult>((resolve, reject) => {
-            this.socket.emit('join', info, (result: IJoinResult) => {
-                if (result.error != null) { reject(result) }
+    public enterRoom(info: JoinInfo): Promise<ISyncData> {
+        return new Promise<ISyncData>((resolve, reject) => {
+            this.socket.emit('join', info, (response: ISocketResponse) => {
+                if (response.error != null) { reject(response.error) }
+                let result: ISyncData = response.result;
+
+                this.stateData.chat = result.chat;
+                this.stateSubjects.chat.next(this.stateData.chat);
+                
                 this.stateSubjects.users.next(result.users);
-                this.stateSubjects.chat.next(result.chat);
+                this.stateSubjects.isHost.next(result.is_host);
+                
+                if (result.stream != null) {
+                    this.stateData.stream = result.stream;
+                    this.stateSubjects.stream.next(result.stream);
+                }
+
                 resolve(result);
+            });
+            this.socket.on('text', (response: ISocketResponse) => {
+                this.stateData.chat.push(response.result);
+                this.stateSubjects.chat.next(this.stateData.chat);
+            });
+            this.socket.on('users', (response: ISocketResponse) => {
+                this.stateSubjects.users.next(response.result);
+            });
+            this.socket.on('host', (response: ISocketResponse) => {
+                this.stateSubjects.isHost.next(response.result.is_host);
+            });
+            this.socket.on('stream', (response: ISocketResponse) => {
+                this.stateSubjects.stream.next(response.result);
             });
         })
     }
 
     public leaveRoom() {
         this.socket.disconnect();
+    }
+
+    public sendChatMessage(text: string) {
+        this.socket.emit('text', text);
+    }
+
+    public stream(url: string) {
+        this.socket.emit('stream', url);
     }
 }
 
@@ -91,14 +114,26 @@ interface JoinInfo {
     name: string
 }
 
-interface IJoinResult {
+interface ISyncData {
     error: string;
     chat: IChatEntry[];
     users: string[];
+    is_host: boolean;
+    stream: IStreamStatus;
 }
 
 export interface IChatEntry {
     user: string,
     message: string;
     time: string;
+}
+
+interface IStreamItem {
+    url: string;
+}
+export interface IStreamStatus {
+    currentStream: IStreamItem;
+    isPlaying: boolean;
+    lastPlay: number;
+    lastPlayTime: number;
 }
