@@ -32,7 +32,7 @@ export class RoomController {
         delete this.users[user.name];
 
         //announce new user list
-        this.getRoom().emit('users', Object.keys(this.users));
+        this.getRoom().emit('users', { result: Object.keys(this.users) });
     }
 
     protected decideHost() {
@@ -46,12 +46,16 @@ export class RoomController {
 
         // announce result
         this.host.socket.emit('host', {
-            is_host: true,
-            name: this.host.name
-        })
+            result: {
+                is_host: true,
+                name: this.host.name
+            }
+        });
         this.host.socket.in(this.roomInfo.id).emit('host', {
-            is_host: false,
-            name: this.host.name
+            result: {
+                is_host: false,
+                name: this.host.name
+            }
         });
     }
 
@@ -80,7 +84,7 @@ export class RoomController {
         this.decideHost();
 
         // announce user list
-        this.getRoom().emit('users', Object.keys(this.users));
+        this.getRoom().emit('users', { result: Object.keys(this.users) });
 
         // Bind events
         socket.on('text', (text) => {
@@ -89,7 +93,7 @@ export class RoomController {
                 message: text,
                 time: new Date(Date.now())
             });
-            this.getRoom().in(this.roomInfo.id).emit('text', user.name + ": " + text);
+            this.getRoom().in(this.roomInfo.id).emit('text', { result: user.name + ": " + text } );
         });
 
         socket.on('queue', (url) => {
@@ -113,7 +117,7 @@ export class RoomController {
                 lastPlayTime: 0
             }
 
-            this.getRoom().emit('stream', this.currentStreamInfo.currentStream);
+            this.getRoom().emit('stream', { result: this.currentStreamInfo.currentStream });
         });
         socket.on('play', (offset, time) => {
             if (user.name != this.host.name) { 
@@ -124,8 +128,10 @@ export class RoomController {
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
             socket.in(this.roomInfo.id).emit('play', {
-                offset: offset,
-                time: time
+                result: {
+                    offset: offset,
+                    time: time
+                }
             });
         });
         socket.on('pause', (offset, time) => {
@@ -137,8 +143,10 @@ export class RoomController {
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
             socket.in(this.roomInfo.id).emit('pause', {
-                offset: offset,
-                time: time
+                result: {
+                    offset: offset,
+                    time: time
+                }
             });
         })
 
