@@ -41,8 +41,8 @@ export class RoomService {
             subject = new Subject<any>();
         }
 
-        this.socket.on(event, (result: ISocketData) => {
-            subject.next(result);
+        this.socket.on(event, (response: ISocketResponse) => {
+            subject.next(response.result);
         })
 
         // store and return observer
@@ -55,9 +55,9 @@ export class RoomService {
     }
 }
 
-interface ISocketData {
+interface ISocketResponse {
     error: any;
-    // result: any; 
+    result: any; 
 }
 
 interface JoinInfo {
