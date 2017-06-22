@@ -23,6 +23,37 @@ export class RoomController {
         return undefined;
     }
  
+    /**
+     * Sends a chat message to all clients
+     * @param socket The sockets to broadcast to
+     * @param message The message being sent
+     * @param user The user that made the chat. undefined|null means server message
+     */
+    protected sendChatMessage(socket, message: string, user?: string) {
+        let chatEntry = {
+            message: message,
+            time: Date.now(),
+            user: user
+        };
+        this.chatHistory.push(chatEntry);
+        socket.emit('text', {
+            result: chatEntry
+        })
+    }
+
+    /**
+     * Get state data package formatted for client use
+     */
+    protected getClientSyncData(user: IUserInfo) {
+        return {
+            users: Object.keys(this.users),
+            chat: this.chatHistory,
+            host: this.host.name,
+            is_host: user.name == this.host.name,
+            stream: this.currentStreamInfo
+        }
+    }
+
     protected getRoom() {
         return this.namespace.in(this.roomInfo.id);
     }
@@ -57,6 +88,7 @@ export class RoomController {
                 name: this.host.name
             }
         });
+        this.sendChatMessage(this.getRoom().in(this.roomInfo.id), this.host.name + " is now host.");
     }
 
     public verifyUser(joinInfo): Promise<boolean> {
@@ -81,6 +113,10 @@ export class RoomController {
         // Add user
         this.users[user.name] = user;
 
+        //announce user join
+        this.sendChatMessage(this.getRoom().in(this.roomInfo.id), user.name + " join the room.");
+
+        // Decide if host will change from this join
         this.decideHost();
 
         // announce user list
@@ -88,12 +124,8 @@ export class RoomController {
 
         // Bind events
         socket.on('text', (text) => {
-            this.chatHistory.push(<IChatText>{ 
-                user: user.name,
-                message: text,
-                time: new Date(Date.now())
-            });
-            this.getRoom().in(this.roomInfo.id).emit('text', { result: user.name + ": " + text } );
+            this.sendChatMessage(this.getRoom().in(this.roomInfo.id), text, user.name);
+            // this.getRoom().in(this.roomInfo.id).emit('text', { result: user.name + ": " + text } );
         });
 
         socket.on('queue', (url) => {
@@ -151,9 +183,8 @@ export class RoomController {
         })
 
         // sync room
-        ackFn({ 
-            chat: this.chatHistory,
-            users: Object.keys(this.users),
+        ackFn({
+            result: this.getClientSyncData(user)
         });
     }
 
@@ -161,6 +192,7 @@ export class RoomController {
         let user = this.getUserFromSocket(socket);
         this.removeUser(user);
         if (this.host.name == user.name) { this.host = null; }
+        this.sendChatMessage(this.getRoom().in(this.roomInfo.id), user.name + " left the room.");
 
         if (this.host == null) { this.decideHost(); }
     }
@@ -174,7 +206,7 @@ export interface IUserInfo {
 export interface IChatText {
     user: string; // null if server
     message: string;
-    time: Date;
+    time: number;
 }
 
 export interface IStreamItem {
@@ -184,6 +216,6 @@ export interface IStreamItem {
 export interface IStreamStatus {
     currentStream: IStreamItem;
     isPlaying: boolean;
-    lastPlay: Date;
+    lastPlay: number;
     lastPlayTime: number;
 }
