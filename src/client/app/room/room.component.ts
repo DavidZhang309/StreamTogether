@@ -1,4 +1,5 @@
-import { RoomService, IChatEntry, IStreamStatus } from './room.service'
+import { RoomService, IChatEntry, IStreamStatus } from './room.service';
+import { UserService } from '../user/user.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
@@ -7,7 +8,8 @@ import { Subject } from 'rxjs/Subject';
 
 @Component({
     providers: [ 
-        RoomService
+        RoomService,
+        UserService
     ],
     selector: 'room',
     templateUrl: '/components/room/room.html',
@@ -18,12 +20,12 @@ export class RoomComponent implements OnInit, OnDestroy {
     users: Observable<string[]>;
     chat: Observable<IChatEntry[]>;
     isHost: Observable<boolean>;
-    stream: Observable<IStreamStatus>;
+    stream: IStreamStatus;
 
     chatText: string;
     url: string;
 
-    public constructor(private router: ActivatedRoute, private roomSvc: RoomService) { }
+    public constructor(private router: ActivatedRoute, private roomSvc: RoomService, private userSvc: UserService) { }
 
     public ngOnInit() {
         this.tab = 'users';
@@ -31,12 +33,17 @@ export class RoomComponent implements OnInit, OnDestroy {
         this.users = this.roomSvc.getUsers();
         this.chat = this.roomSvc.getChat();
         this.isHost = this.roomSvc.isHost();
-        this.stream = this.roomSvc.getStream();
+        let streamOb = this.roomSvc.getStream();
 
+        streamOb.subscribe((stream) => {
+            this.stream = stream;
+        })
+
+        let username = this.userSvc.getName();
         this.router.params.subscribe((params) => {
             this.roomSvc.enterRoom({ 
                 id: params['id'], 
-                name: 'Angular client' 
+                name: username == null ? 'Angular client' : username
             }).then((result) => {
                 // console.log(result);
             });
@@ -58,6 +65,15 @@ export class RoomComponent implements OnInit, OnDestroy {
 
     public streamUrl() {
         if (this.url.length == 0) { return }
+        this.roomSvc.stream(this.url);
+    }
+    public playStream() {
+
+    }
+    public pauseStream() {
+
+    }
+    public seekStream() {
         
     }
 }
