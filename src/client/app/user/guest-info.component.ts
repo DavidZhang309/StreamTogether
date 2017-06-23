@@ -19,7 +19,8 @@ export class GuestInfoComponent {
     public changeName() {
         if (this.name.length == 0) { return; }
 
-        this.userSvc.setGuestName(name);
-        this.router.navigateByUrl('/app');
+        this.userSvc.setGuestName(this.name);
+        //TODO: save last page/do not navigate
+        this.router.navigateByUrl('/lobby');
     }
 }
