@@ -5,6 +5,7 @@ export class RoomController {
     users: any = { }; //[string] => userinfo
     host: IUserInfo = null;
     chatHistory: IChatText[] = [];
+    streamHistory: IStreamItem[] = [];
     currentStreamInfo: IStreamStatus = null;
     roomInfo: IRoomInfo;
     namespace: any;
@@ -46,6 +47,7 @@ export class RoomController {
     protected getClientSyncData(user: IUserInfo) {
         return {
             users: Object.keys(this.users),
+            history: this.streamHistory,
             chat: this.chatHistory,
             host: this.host.name,
             is_host: user.name == this.host.name,
@@ -147,7 +149,7 @@ export class RoomController {
                 lastPlay: null,
                 lastPlayTime: 0
             }
-
+            this.streamHistory.push(this.currentStreamInfo.currentStream);
             this.getRoom().emit('stream', { result: this.currentStreamInfo });
         });
         socket.on('play', (offset, time) => {
