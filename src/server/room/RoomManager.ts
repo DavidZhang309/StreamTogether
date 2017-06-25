@@ -1,5 +1,5 @@
 import * as sockets from 'socket.io';
-import { RoomDataService, IRoomInfo } from './services/RoomDataService'
+import { RoomDataService, IRoomInfo } from '../services/RoomDataService'
 import { RoomController } from './RoomController';
 
 export class RoomManager {

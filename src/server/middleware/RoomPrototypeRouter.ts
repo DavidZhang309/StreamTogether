@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { RoomManager } from '../RoomManager';
+import { RoomManager } from '../room/RoomManager';
 
 export class RoomPrototypeRouter {
     router = Router();

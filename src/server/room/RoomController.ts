@@ -1,4 +1,4 @@
-import { RoomDataService, IRoomInfo } from './services/RoomDataService';
+import { RoomDataService, IRoomInfo } from '../services/RoomDataService';
 
 export class RoomController {
     service = new RoomDataService();

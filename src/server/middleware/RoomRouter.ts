@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { IRoomInfo } from '../services/RoomDataService';
-import { RoomManager } from '../RoomManager'; 
+import { RoomManager } from '../room/RoomManager'; 
 
 export class RoomRouter {
     roomMgr: RoomManager
