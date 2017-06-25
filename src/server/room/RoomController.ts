@@ -2,8 +2,7 @@ import { RoomDataService, IRoomInfo } from '../services/RoomDataService';
 
 export class RoomController {
     service = new RoomDataService();
-    users: any = { }; //[string] => userinfo
-    host: IUserInfo = null;
+    users: { [name: string]: IUserInfo } = { };
     chatHistory: IChatText[] = [];
     streamHistory: IStreamItem[] = [];
     currentStreamInfo: IStreamStatus = null;
@@ -41,6 +40,10 @@ export class RoomController {
         })
     }
 
+    protected canUserControlStream(user: IUserInfo) {
+        return user.inSync && user.hasControl;
+    }
+
     /**
      * Get state data package formatted for client use
      */
@@ -49,14 +52,13 @@ export class RoomController {
             users: Object.keys(this.users),
             history: this.streamHistory,
             chat: this.chatHistory,
-            host: this.host.name,
-            is_host: user.name == this.host.name,
             stream: this.currentStreamInfo
         }
     }
 
-    protected getRoom() {
-        return this.namespace.in(this.roomInfo.id);
+    protected getRoom(socket?: any) {
+        if (!socket) { socket = this.namespace; }
+        return socket.in(this.roomInfo.id);
     }
 
     protected removeUser(user: IUserInfo) {
@@ -65,31 +67,6 @@ export class RoomController {
 
         //announce new user list
         this.getRoom().emit('users', { result: Object.keys(this.users) });
-    }
-
-    protected decideHost() {
-        if (this.host != null) { return; } //host still exists
-
-        let userList = Object.keys(this.users);
-        if (userList.length == 0) { return; } //no one to be host
-
-        // random host
-        this.host = this.users[userList[Math.floor(Math.random() * userList.length)]];
-
-        // announce result
-        this.host.socket.emit('host', {
-            result: {
-                is_host: true,
-                name: this.host.name
-            }
-        });
-        this.host.socket.in(this.roomInfo.id).emit('host', {
-            result: {
-                is_host: false,
-                name: this.host.name
-            }
-        });
-        this.sendChatMessage(this.getRoom().in(this.roomInfo.id), this.host.name + " is now host.");
     }
 
     public verifyUser(joinInfo): Promise<boolean> {
@@ -108,7 +85,9 @@ export class RoomController {
     public clientJoin(socket, joinInfo, ackFn) {
         let user = {
             socket: socket,
-            name: joinInfo.name
+            name: joinInfo.name,
+            hasControl: true, 
+            inSync: true
         };
 
         // Add user
@@ -117,32 +96,27 @@ export class RoomController {
         //announce user join
         this.sendChatMessage(this.getRoom().in(this.roomInfo.id), user.name + " join the room.");
 
-        // Decide if host will change from this join
-        this.decideHost();
-
         // announce user list
         this.getRoom().emit('users', { result: Object.keys(this.users) });
 
         // Bind events
         socket.on('text', (text) => {
             this.sendChatMessage(this.getRoom().in(this.roomInfo.id), text, user.name);
-            // this.getRoom().in(this.roomInfo.id).emit('text', { result: user.name + ": " + text } );
         });
 
-        socket.on('queue', (url) => {
-            //TODO: attempt to get metadata
+        socket.on('sync', (sync) => {
+            user.inSync = true;
+        })
 
-        });
-
-        //host events
+        //control events
         socket.on('stream', (url) => {
-            if (user.name != this.host.name) { 
-                ackFn({ error: 'You are not host.' }); 
+            if (!this.canUserControlStream(user)) { 
+                ackFn({ error: 'You cannot control the live stream.' }); 
                 return 
             }
             
-            this.currentStreamInfo = <IStreamStatus>{
-                currentStream: <IStreamItem>{
+            this.currentStreamInfo = {
+                currentStream: {
                     url: url
                 },
                 isPlaying: false,
@@ -153,29 +127,33 @@ export class RoomController {
             this.getRoom().emit('stream', { result: this.currentStreamInfo });
         });
         socket.on('play', (offset, time) => {
-            if (user.name != this.host.name) { 
-                ackFn({ error: 'You are not host.' }); 
+            if (!this.canUserControlStream(user)) { 
+                ackFn({ error: 'You cannot control the live stream.' }); 
                 return 
             }
             this.currentStreamInfo.isPlaying = true;
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
-            this.getRoom().emit('streamEvent', { result: this.currentStreamInfo });
+            this.getRoom(user.socket).emit('streamEvent', { result: this.currentStreamInfo });
         });
         socket.on('pause', (offset, time) => {
-            if (user.name != this.host.name) { 
-                ackFn({ error: 'You are not host.' }); 
-                return  
+            if (!this.canUserControlStream(user)) { 
+                ackFn({ error: 'You cannot control the live stream.' }); 
+                return 
             }
             this.currentStreamInfo.isPlaying = false;
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
-            this.getRoom().emit('streamEvent', { result: this.currentStreamInfo });
+            this.getRoom(user.socket).emit('streamEvent', { result: this.currentStreamInfo });
         });
         socket.on('seek', (offset, time) => {
+            if (!this.canUserControlStream(user)) { 
+                ackFn({ error: 'You cannot control the live stream.' }); 
+                return 
+            }
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
-            this.getRoom().emit('streamEvent', { result: this.currentStreamInfo });
+            this.getRoom(user.socket).emit('streamEvent', { result: this.currentStreamInfo });
         })
 
         // sync room
@@ -187,16 +165,15 @@ export class RoomController {
     public clientLeave(socket) {
         let user = this.getUserFromSocket(socket);
         this.removeUser(user);
-        if (this.host.name == user.name) { this.host = null; }
         this.sendChatMessage(this.getRoom().in(this.roomInfo.id), user.name + " left the room.");
-
-        if (this.host == null) { this.decideHost(); }
     }
 }
 
 export interface IUserInfo {
-    socket;
+    socket: any;
     name: string;
+    hasControl: boolean;
+    inSync: boolean
 }
 
 export interface IChatText {
