@@ -1,10 +1,12 @@
+import { VideoDirective } from './media.directive';
 import { RoomService, IChatEntry, IStreamStatus } from './room.service';
 import { UserService } from '../user/user.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ViewChildren, QueryList, ElementRef, Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import 'rxjs/add/operator/first';
 
 @Component({
     providers: [ 
@@ -14,7 +16,10 @@ import { Subject } from 'rxjs/Subject';
     selector: 'room',
     templateUrl: '/components/room/room.html',
 })
-export class RoomComponent implements OnInit, OnDestroy {
+export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
+    @ViewChildren('videoPlayer') 
+    videoPlayerQuery: QueryList<ElementRef>;
+
     inSync: boolean;
     tab: string;
     users: Observable<string[]>;
@@ -24,8 +29,12 @@ export class RoomComponent implements OnInit, OnDestroy {
 
     chatText: string;
     url: string;
+    streamTime: number;
 
-    public constructor(private router: ActivatedRoute, private roomSvc: RoomService, private userSvc: UserService) { }
+    public constructor(private router: ActivatedRoute, private roomSvc: RoomService, private userSvc: UserService) { 
+        this.streamTime = 0;
+        this.url = '';
+    }
 
     public ngOnInit() {
         this.tab = 'users';
@@ -33,11 +42,6 @@ export class RoomComponent implements OnInit, OnDestroy {
         this.users = this.roomSvc.getUsers();
         this.chat = this.roomSvc.getChat();
         this.isHost = this.roomSvc.isHost();
-        let streamOb = this.roomSvc.getStream();
-
-        streamOb.subscribe((stream) => {
-            this.stream = stream;
-        })
 
         let username = this.userSvc.getName();
         this.router.params.subscribe((params) => {
@@ -45,8 +49,36 @@ export class RoomComponent implements OnInit, OnDestroy {
                 id: params['id'], 
                 name: username == null ? 'Angular client' : username
             }).then((result) => {
-                // console.log(result);
+                this.stream = result.stream;
             });
+        });
+    }
+
+    public ngAfterViewInit() {
+        this.roomSvc.getStream().subscribe((stream) => {
+            this.stream = stream;
+            let videoPlayer = this.videoPlayerQuery.first;
+
+            this.url = stream.currentStream.url;
+            let offset = stream.isPlaying ? (Date.now() - stream.lastPlay) / 1000 : 0;
+            this.streamTime = offset + stream.lastPlayTime;
+
+            if (stream != null) {
+                setTimeout(() => {
+                    this.videoPlayerQuery.first.nativeElement.load();
+                }, 100);
+            }
+        });
+
+        this.roomSvc.getStreamEvents().subscribe((stream) => {
+            let offset = stream.isPlaying ? (Date.now() - stream.lastPlay) / 1000 : 0;
+            this.streamTime = offset + stream.lastPlayTime;
+
+            if (stream.isPlaying) {
+                this.videoPlayerQuery.first.nativeElement.play();
+            } else {
+                this.videoPlayerQuery.first.nativeElement.pause();
+            }
         });
     }
 
@@ -67,13 +99,13 @@ export class RoomComponent implements OnInit, OnDestroy {
         if (this.url.length == 0) { return }
         this.roomSvc.stream(this.url);
     }
-    public playStream() {
-
+    public playStream(currentTime: number) {
+        this.roomSvc.playStream(currentTime);
     }
-    public pauseStream() {
-
+    public pauseStream(currentTime: number) {
+        this.roomSvc.pauseStrean(currentTime);
     }
-    public seekStream() {
-        
+    public seekStream(currentTime: number) {
+        this.roomSvc.seekStream(currentTime);        
     }
 }

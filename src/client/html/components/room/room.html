@@ -7,9 +7,15 @@
         <section class="col-sm-12 col-md-8">
             <div id="play-area" class="blank" style="">
                 <div class="wrapper">
-                    <video id="video-player" controls *ngIf="stream != null" (play)="playStream()" (pause)="pauseStream()" (seeking)="seekStream()">
-                        <source src="{{stream.currentStream.url}}">
-                    </video>
+                        <video id="video-player" #videoPlayer controls 
+                            *ngIf="stream != null"
+                            [currentTime]="streamTime"
+                            (play)="playStream(videoPlayer.currentTime)" 
+                            (pause)="pauseStream(videoPlayer.currentTime)" 
+                            (seeking)="seekStream(videoPlayer.currentTime)"
+                        >
+                            <source src="{{url}}">
+                        </video>
                     <audio></audio>
                     <img class="hidden">
                 </div>
