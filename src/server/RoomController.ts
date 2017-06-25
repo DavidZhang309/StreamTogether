@@ -1,6 +1,5 @@
 import { RoomDataService, IRoomInfo } from './services/RoomDataService';
 
-
 export class RoomController {
     service = new RoomDataService();
     users: any = { }; //[string] => userinfo
@@ -149,7 +148,7 @@ export class RoomController {
                 lastPlayTime: 0
             }
 
-            this.getRoom().emit('stream', { result: this.currentStreamInfo.currentStream });
+            this.getRoom().emit('stream', { result: this.currentStreamInfo });
         });
         socket.on('play', (offset, time) => {
             if (user.name != this.host.name) { 
@@ -159,12 +158,7 @@ export class RoomController {
             this.currentStreamInfo.isPlaying = true;
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
-            socket.in(this.roomInfo.id).emit('play', {
-                result: {
-                    offset: offset,
-                    time: time
-                }
-            });
+            this.getRoom().emit('streamEvent', { result: this.currentStreamInfo });
         });
         socket.on('pause', (offset, time) => {
             if (user.name != this.host.name) { 
@@ -174,12 +168,12 @@ export class RoomController {
             this.currentStreamInfo.isPlaying = false;
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
-            socket.in(this.roomInfo.id).emit('pause', {
-                result: {
-                    offset: offset,
-                    time: time
-                }
-            });
+            this.getRoom().emit('streamEvent', { result: this.currentStreamInfo });
+        });
+        socket.on('seek', (offset, time) => {
+            this.currentStreamInfo.lastPlay = time;
+            this.currentStreamInfo.lastPlayTime = offset;
+            this.getRoom().emit('streamEvent', { result: this.currentStreamInfo });
         })
 
         // sync room
