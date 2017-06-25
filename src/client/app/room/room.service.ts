@@ -16,12 +16,14 @@ export class RoomService {
         users: BehaviorSubject<string[]>,
         chat: BehaviorSubject<IChatEntry[]>,
         isHost: BehaviorSubject<boolean>,
-        stream: Subject<IStreamStatus>
+        stream: Subject<IStreamStatus>,
+        streamEvents: Subject<IStreamStatus>,
     }
     private stateData: { 
         users: string[],
         chat: IChatEntry[],
-        stream: IStreamStatus
+        stream: IStreamStatus,
+        isHost: boolean
     };
 
     public constructor() {
@@ -30,12 +32,14 @@ export class RoomService {
             users: new BehaviorSubject([]),
             chat: new BehaviorSubject([]),
             isHost: new BehaviorSubject(false),
-            stream: new Subject()
+            stream: new Subject(),
+            streamEvents: new Subject()
         }
         this.stateData = {
             users: [],
             chat: [],
-            stream: null
+            stream: null,
+            isHost: false
         }
     }
 
@@ -55,6 +59,10 @@ export class RoomService {
         return this.stateSubjects.stream.asObservable();
     }
 
+    public getStreamEvents(): Observable<IStreamStatus> {
+        return this.stateSubjects.streamEvents.asObservable();
+    }
+
     //
     public enterRoom(info: JoinInfo): Promise<ISyncData> {
         return new Promise<ISyncData>((resolve, reject) => {
@@ -66,6 +74,8 @@ export class RoomService {
                 this.stateSubjects.chat.next(this.stateData.chat);
                 
                 this.stateSubjects.users.next(result.users);
+
+                this.stateData.isHost = result.is_host;
                 this.stateSubjects.isHost.next(result.is_host);
                 
                 if (result.stream != null) {
@@ -83,11 +93,16 @@ export class RoomService {
                 this.stateSubjects.users.next(response.result);
             });
             this.socket.on('host', (response: ISocketResponse) => {
+                this.stateData.isHost = response.result.is_host;
                 this.stateSubjects.isHost.next(response.result.is_host);
             });
             this.socket.on('stream', (response: ISocketResponse) => {
                 this.stateSubjects.stream.next(response.result);
             });
+            this.socket.on('streamEvent', (response: ISocketResponse) => {
+                if (this.stateData.isHost) { return; }
+                this.stateSubjects.streamEvents.next(response.result);
+            })
         })
     }
 
@@ -100,7 +115,25 @@ export class RoomService {
     }
 
     public stream(url: string) {
-        this.socket.emit('stream', url);
+        if (this.stateData.isHost) {
+            this.socket.emit('stream', url);
+        }
+    }
+
+    public playStream(offset: number) {
+        if (this.stateData.isHost) {
+            this.socket.emit('play', offset, Date.now());
+        }
+    }
+    public pauseStrean(offset: number) {
+        if (this.stateData.isHost) {
+            this.socket.emit('pause', offset, Date.now());
+        }
+    }
+    public seekStream(offset: number) {
+        if (this.stateData.isHost) {
+            this.socket.emit('seek', offset, Date.now());
+        }
     }
 }
 
