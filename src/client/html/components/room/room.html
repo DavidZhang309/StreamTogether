@@ -2,7 +2,6 @@
     <p>
         <a routerLink="/lobby" class="btn btn-default">Back to lobby</a>
     </p>
-    <button *ngIf='inSync==false' class="btn btn-default">Sync</button>
     <div class="row">
         <section class="col-sm-12 col-md-8">
             <div id="play-area" class="blank" style="">
@@ -20,7 +19,7 @@
                     <img class="hidden">
                 </div>
             </div>
-            <form (ngSubmit)="streamUrl()" *ngIf="isHost | async">
+            <form (ngSubmit)="streamUrl()" *ngIf="isHost">
                 <div class="form-group">
                     <div class="input-group">
                         <label class="input-group-addon" for="url">url:</label>
@@ -62,6 +61,9 @@
                     <li class="active"><a (click)="switchTab('history')">History</a></li>
                     <li><a (click)="switchTab('users')">Users</a></li>
                 </ul>
+                <div *ngFor="let entry of history | async">
+                    <div class="div-entry">{{entry.url}}</div>
+                </div>
             </div>
             <div *ngIf="tab == 'users'">
                 <ul class="nav nav-tabs">

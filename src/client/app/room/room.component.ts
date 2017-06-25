@@ -1,5 +1,4 @@
-import { VideoDirective } from './media.directive';
-import { RoomService, IChatEntry, IStreamStatus } from './room.service';
+import { RoomService, IChatEntry, IStreamItem, IStreamStatus } from './room.service';
 import { UserService } from '../user/user.service';
 import { ViewChildren, QueryList, ElementRef, Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -20,11 +19,11 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
     @ViewChildren('videoPlayer') 
     videoPlayerQuery: QueryList<ElementRef>;
 
-    inSync: boolean;
     tab: string;
     users: Observable<string[]>;
     chat: Observable<IChatEntry[]>;
-    isHost: Observable<boolean>;
+    history: Observable<IStreamItem[]>;
+    isHost: boolean;
     stream: IStreamStatus;
 
     chatText: string;
@@ -34,14 +33,18 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
     public constructor(private router: ActivatedRoute, private roomSvc: RoomService, private userSvc: UserService) { 
         this.streamTime = 0;
         this.url = '';
+        this.isHost = false;
     }
 
     public ngOnInit() {
         this.tab = 'users';
         
         this.users = this.roomSvc.getUsers();
+        this.history = this.roomSvc.getHistory();
         this.chat = this.roomSvc.getChat();
-        this.isHost = this.roomSvc.isHost();
+        this.roomSvc.isHost().subscribe((isHost) => {
+            this.isHost = isHost;
+        });
 
         let username = this.userSvc.getName();
         this.router.params.subscribe((params) => {
@@ -49,7 +52,7 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
                 id: params['id'], 
                 name: username == null ? 'Angular client' : username
             }).then((result) => {
-                this.stream = result.stream;
+                console.log(result);
             });
         });
     }
@@ -71,6 +74,8 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
         });
 
         this.roomSvc.getStreamEvents().subscribe((stream) => {
+            this.stream = stream;
+
             let offset = stream.isPlaying ? (Date.now() - stream.lastPlay) / 1000 : 0;
             this.streamTime = offset + stream.lastPlayTime;
 
@@ -106,6 +111,6 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
         this.roomSvc.pauseStrean(currentTime);
     }
     public seekStream(currentTime: number) {
-        this.roomSvc.seekStream(currentTime);        
+        this.roomSvc.seekStream(currentTime);
     }
 }
