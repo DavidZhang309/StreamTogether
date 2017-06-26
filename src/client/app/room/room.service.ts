@@ -180,6 +180,7 @@ export interface IStreamStatus {
 }
 
 export interface IStreamEvent {
+    user: string,
     event: string,
     stream: IStreamStatus
 }

@@ -137,6 +137,7 @@ export class RoomController {
             this.currentStreamInfo.lastPlayTime = offset;
             this.getRoom(user.socket).emit('streamEvent', { 
                 result: {
+                    user: user.name,
                     event: 'play',
                     stream: this.currentStreamInfo 
                 }
@@ -152,6 +153,7 @@ export class RoomController {
             this.currentStreamInfo.lastPlayTime = offset;
             this.getRoom(user.socket).emit('streamEvent', { 
                 result: {
+                    user: user.name,
                     event: 'pause',
                     stream: this.currentStreamInfo 
                 }
@@ -166,6 +168,7 @@ export class RoomController {
             this.currentStreamInfo.lastPlayTime = offset;
             this.getRoom(user.socket).emit('streamEvent', { 
                 result: {
+                    user: user.name,
                     event: 'seek',
                     stream: this.currentStreamInfo 
                 }

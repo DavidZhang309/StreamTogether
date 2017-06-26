@@ -25,6 +25,7 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
     liveStream: IStreamStatus;
     stream: IStreamStatus;
 
+    username: string;
     tab: string;
     hasControl: boolean;
     inSync: boolean;
@@ -54,7 +55,7 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
     private syncPlayer() {
         let urlChanged = this.liveStream.currentStream.url != this.stream.currentStream.url;
         this.stream = this.liveStream; //merge back to live
-        
+
         this.url = this.stream.currentStream.url;
         let offset = this.stream.isPlaying ? (Date.now() - this.stream.lastPlay) / 1000 : 0;
         this.streamTime = offset + this.stream.lastPlayTime;
@@ -79,11 +80,11 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     public ngOnInit() {
-        let username = this.userSvc.getName();
+        this.username = this.userSvc.getName();
         this.router.params.subscribe((params) => {
             this.roomSvc.enterRoom({ 
                 id: params['id'], 
-                name: username == null ? 'Angular client' : username
+                name: this.username == null ? 'Angular client' : this.username
             });
         });
     }
@@ -104,6 +105,9 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
             } else {
                 return;
             }
+
+            // if own event
+            if (event.user == this.username) { return; }
 
             this.syncing = true;
             let offset = this.stream.isPlaying ? (Date.now() - this.stream.lastPlay) / 1000 : 0;
