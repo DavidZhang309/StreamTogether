@@ -52,6 +52,7 @@ export class RoomController {
             users: Object.keys(this.users),
             history: this.streamHistory,
             chat: this.chatHistory,
+            hasControl: user.hasControl,
             stream: this.currentStreamInfo
         }
     }
@@ -105,8 +106,8 @@ export class RoomController {
         });
 
         socket.on('sync', (sync) => {
-            user.inSync = true;
-        })
+            user.inSync = sync == true; //coerce to boolean
+        });
 
         //control events
         socket.on('stream', (url) => {
@@ -134,7 +135,12 @@ export class RoomController {
             this.currentStreamInfo.isPlaying = true;
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
-            this.getRoom(user.socket).emit('streamEvent', { result: this.currentStreamInfo });
+            this.getRoom(user.socket).emit('streamEvent', { 
+                result: {
+                    event: 'play',
+                    stream: this.currentStreamInfo 
+                }
+            });
         });
         socket.on('pause', (offset, time) => {
             if (!this.canUserControlStream(user)) { 
@@ -144,7 +150,12 @@ export class RoomController {
             this.currentStreamInfo.isPlaying = false;
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
-            this.getRoom(user.socket).emit('streamEvent', { result: this.currentStreamInfo });
+            this.getRoom(user.socket).emit('streamEvent', { 
+                result: {
+                    event: 'pause',
+                    stream: this.currentStreamInfo 
+                }
+            });
         });
         socket.on('seek', (offset, time) => {
             if (!this.canUserControlStream(user)) { 
@@ -153,7 +164,12 @@ export class RoomController {
             }
             this.currentStreamInfo.lastPlay = time;
             this.currentStreamInfo.lastPlayTime = offset;
-            this.getRoom(user.socket).emit('streamEvent', { result: this.currentStreamInfo });
+            this.getRoom(user.socket).emit('streamEvent', { 
+                result: {
+                    event: 'seek',
+                    stream: this.currentStreamInfo 
+                }
+            });
         })
 
         // sync room
