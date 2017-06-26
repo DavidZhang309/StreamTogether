@@ -1,17 +1,18 @@
 <main class="container">
     <p>
         <a routerLink="/lobby" class="btn btn-default">Back to lobby</a>
+        <button (click)="sync(!inSync)" class="btn btn-default">{{ inSync ? 'desync' : 'sync' }}</button>
     </p>
     <div class="row">
         <section class="col-sm-12 col-md-8">
-            <div id="play-area" class="blank" style="">
+            <div id="play-area" class="blank">
                 <div class="wrapper">
                         <video id="video-player" #videoPlayer controls 
                             *ngIf="stream != null"
                             [currentTime]="streamTime"
                             (play)="playStream(videoPlayer.currentTime)" 
                             (pause)="pauseStream(videoPlayer.currentTime)" 
-                            (seeking)="seekStream(videoPlayer.currentTime)"
+                            (seek)="seekStream(videoPlayer.currentTime)"
                         >
                             <source src="{{url}}">
                         </video>
@@ -19,7 +20,7 @@
                     <img class="hidden">
                 </div>
             </div>
-            <form (ngSubmit)="streamUrl()" *ngIf="isHost">
+            <form (ngSubmit)="streamUrl()" *ngIf="hasControl">
                 <div class="form-group">
                     <div class="input-group">
                         <label class="input-group-addon" for="url">url:</label>

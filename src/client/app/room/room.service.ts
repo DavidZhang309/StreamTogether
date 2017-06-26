@@ -16,16 +16,18 @@ export class RoomService {
         users: BehaviorSubject<string[]>,
         history: BehaviorSubject<IStreamItem[]>,
         chat: BehaviorSubject<IChatEntry[]>,
-        isHost: BehaviorSubject<boolean>,
         stream: Subject<IStreamStatus>,
-        streamEvents: Subject<IStreamStatus>,
+        streamEvents: Subject<IStreamEvent>,
+        hasControl: BehaviorSubject<boolean>
+        inSync: BehaviorSubject<boolean>
     }
     private stateData: { 
         users: string[],
         chat: IChatEntry[],
         history: IStreamItem[],
         stream: IStreamStatus,
-        isHost: boolean
+        hasControl: boolean,
+        inSync: boolean
     };
 
     public constructor() {
@@ -34,16 +36,18 @@ export class RoomService {
             users: new BehaviorSubject([]),
             history: new BehaviorSubject([]),
             chat: new BehaviorSubject([]),
-            isHost: new BehaviorSubject(false),
             stream: new Subject(),
-            streamEvents: new Subject()
+            streamEvents: new Subject(),
+            hasControl: new BehaviorSubject(false),
+            inSync: new BehaviorSubject(true)
         }
         this.stateData = {
             users: [],
             chat: [],
             history: [],
             stream: null,
-            isHost: false
+            hasControl: false,
+            inSync: true
         }
     }
 
@@ -59,35 +63,39 @@ export class RoomService {
         return this.stateSubjects.history.asObservable();
     }
 
-    public isHost(): Observable<boolean> {
-        return this.stateSubjects.isHost.asObservable();
-    }
-
     public getStream(): Observable<IStreamStatus> {
         return this.stateSubjects.stream.asObservable();
     }
 
-    public getStreamEvents(): Observable<IStreamStatus> {
+    public getStreamEvents(): Observable<IStreamEvent> {
         return this.stateSubjects.streamEvents.asObservable();
     }
 
-    //
+
+    public isSync(): Observable<boolean> {
+        return this.stateSubjects.inSync.asObservable();
+    }
+    public hasControl(): Observable<boolean> {
+        return this.stateSubjects.hasControl.asObservable();
+    }
+
+    
     public enterRoom(info: JoinInfo): Promise<ISyncData> {
         return new Promise<ISyncData>((resolve, reject) => {
             this.socket.emit('join', info, (response: ISocketResponse) => {
                 if (response.error != null) { reject(response.error) }
                 let result: ISyncData = response.result;
-
+                console.log(result);
                 this.stateData.chat = result.chat;
                 this.stateSubjects.chat.next(this.stateData.chat);
                 
                 this.stateSubjects.users.next(result.users);
 
-                this.stateData.isHost = result.is_host;
-                this.stateSubjects.isHost.next(result.is_host);
-
                 this.stateData.history = result.history;
                 this.stateSubjects.history.next(result.history);
+
+                this.stateData.hasControl = result.hasControl;
+                this.stateSubjects.hasControl.next(result.hasControl);
                 
                 if (result.stream != null) {
                     this.stateData.stream = result.stream;
@@ -103,34 +111,30 @@ export class RoomService {
             this.socket.on('users', (response: ISocketResponse) => {
                 this.stateSubjects.users.next(response.result);
             });
-            this.socket.on('host', (response: ISocketResponse) => {
-                this.stateData.isHost = response.result.is_host;
-                this.stateSubjects.isHost.next(response.result.is_host);
-            });
             this.socket.on('stream', (response: ISocketResponse) => {
                 this.stateData.history.push(response.result.currentStream);
                 this.stateSubjects.history.next(this.stateData.history);
                 this.stateSubjects.stream.next(response.result);
             });
             this.socket.on('streamEvent', (response: ISocketResponse) => {
-                if (this.stateData.isHost) { return; }
                 this.stateSubjects.streamEvents.next(response.result);
             })
         })
     }
-
     public leaveRoom() {
         this.socket.disconnect();
     }
-
     public sendChatMessage(text: string) {
         this.socket.emit('text', text);
     }
+    public sync(sync: boolean) {
+        this.socket.emit('sync', sync);
+    } 
 
+    // CONTROL METHODS
     public stream(url: string) {
         this.socket.emit('stream', url);
     }
-
     public playStream(offset: number) {
         this.socket.emit('play', offset, Date.now());
     }
@@ -156,8 +160,8 @@ interface ISyncData {
     chat: IChatEntry[];
     history: IStreamItem[];
     users: string[];
-    is_host: boolean;
     stream: IStreamStatus;
+    hasControl: boolean;
 }
 
 export interface IChatEntry {
@@ -165,7 +169,6 @@ export interface IChatEntry {
     message: string;
     time: string;
 }
-
 export interface IStreamItem {
     url: string;
 }
@@ -174,4 +177,9 @@ export interface IStreamStatus {
     isPlaying: boolean;
     lastPlay: number;
     lastPlayTime: number;
+}
+
+export interface IStreamEvent {
+    event: string,
+    stream: IStreamStatus
 }
