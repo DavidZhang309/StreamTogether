@@ -6,8 +6,8 @@ import * as path from 'path';
 import * as sockets from 'socket.io';
 import * as config from './config';
 
-import { RoomManager } from './RoomManager';
-import { RoomController } from './RoomController';
+import { RoomManager } from './room/RoomManager';
+import { RoomController } from './room/RoomController';
 import { RoomRouter } from './middleware/RoomRouter';
 import { RoomPrototypeRouter } from './middleware/RoomPrototypeRouter';
 
