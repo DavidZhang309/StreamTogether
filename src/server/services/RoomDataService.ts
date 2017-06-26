@@ -3,14 +3,12 @@ import * as crypto from 'crypto';
 import { BaseDataService } from './BaseDataService'
 
 export class RoomDataService extends BaseDataService{
-    private hash;
-
     public constructor() {
         super();
-        this.hash = crypto.createHash('sha512');
     }
 
     private getRoomInfo(data: IRoomData): IRoomInfo {
+        if (data == null) { return null; }
         return {
             id: data._id,
             name: data.name,
@@ -20,8 +18,12 @@ export class RoomDataService extends BaseDataService{
 
     public checkPassword(room: IRoomInfo, password: string): Promise<boolean> {
         return this.getRoomData(room.id).then((data) => {
-            this.hash.update(data.salt + password);
-            let hash = this.hash.digest('hex');
+            if (!room.passwordProtected) { return true; }
+            if (password == null) { password = ''; }
+
+            let hashAlgo = crypto.createHash('sha512');
+            hashAlgo.update(data.salt + password);
+            let hash = hashAlgo.digest('hex');
             return data.password === hash;
         });
     }
