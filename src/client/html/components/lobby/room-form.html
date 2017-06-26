@@ -4,6 +4,8 @@
         <div class="form-group">
             <label for="name">Name</label>
             <input [(ngModel)]="room.name" type="text" name="name" class="form-control">
+            <label for="password">Password</label>
+            <input [(ngModel)]="room.password" type="password" name="password" class="form-control">
         </div>
         <button type="submit" class="btn btn-primary">Create room</button>
         <button class="btn btn-danger" routerLink="/lobby">Cancel</button>
