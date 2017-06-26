@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { IRoomInfo } from '../services/RoomDataService';
+import { IRoomInfo, IRoomArgs } from '../services/RoomDataService';
 import { RoomManager } from '../room/RoomManager'; 
 
 export class RoomRouter {
@@ -32,8 +32,11 @@ export class RoomRouter {
      */
     public createRoom(request, response, next) {
         //Gather room information
-        let roomParam = <IRoomInfo>{
-            name: request.body.name
+        let roomParam = <IRoomArgs>{
+            name: request.body.name,
+        }
+        if (request.body.password != null) {
+            roomParam.password = request.body.password;
         }
 
         this.roomMgr.makeRoom(roomParam).then((result) =>{

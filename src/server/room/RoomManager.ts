@@ -1,5 +1,5 @@
 import * as sockets from 'socket.io';
-import { RoomDataService, IRoomInfo } from '../services/RoomDataService'
+import { RoomDataService, IRoomInfo, IRoomArgs } from '../services/RoomDataService'
 import { RoomController } from './RoomController';
 
 export class RoomManager {
@@ -23,21 +23,24 @@ export class RoomManager {
             }
             this.service.getRoom(request.id).then((roomInfo) => {
                 if (roomInfo == null) { 
-                    ackFn({ 
-                        error: 'room does not exist' 
-                    });
-                 } else {
+                    ackFn({ error: 'room does not exist' });
+                    return;
+                }
+                // Check password
+                this.service.checkPassword(roomInfo, request.password).then((result) => {
+                    if (!result) { ackFn({ error: 'bad password' }); return; };
+
                     let joinRoom: RoomController = this.rooms[request.id];
                     joinRoom.verifyUser(request).then(() => {
                         room = joinRoom;
                         socket.join(request.id, () => {
                             room.clientJoin(socket, request, ackFn);
                         });
-                    }).catch((err) =>{
+                    }).catch((err) => {
                         console.log(err);
                         ackFn({ error: 'join failed: ' + err.message })
                     })
-                 }
+                });
             }).catch((err) => {
                 console.log(err);
                 ackFn({ 
@@ -67,15 +70,16 @@ export class RoomManager {
                 return <IRoomInfo>{
                     id: roomInfo.id,
                     name: roomInfo.name,
+                    passwordProtected: roomInfo.passwordProtected,
                     user_count: Object.keys(room.users).length
                 }
             })
         });
     }
 
-    public makeRoom(info: IRoomInfo): Promise<IRoomInfo> {
+    public makeRoom(info: IRoomArgs): Promise<IRoomInfo> {
         return this.service.createRoom(info).then((roomInfo) => {
-            this.rooms[info.id] = new RoomController(this.namespace, info)
+            this.rooms[roomInfo.id] = new RoomController(this.namespace, roomInfo)
             return roomInfo;
         });
     }
