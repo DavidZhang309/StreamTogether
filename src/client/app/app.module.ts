@@ -32,7 +32,7 @@ import { GuestInfoComponent } from './user/guest-info.component';
                 component: GuestInfoComponent
             }
         ]),
-        NgbModule
+        NgbModule.forRoot()
     ],
     declarations: [ 
         AppComponent, 
