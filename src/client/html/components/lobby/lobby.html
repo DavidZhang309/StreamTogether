@@ -1,19 +1,19 @@
 <main class="container">
     <div class="row">
-        <div class="col-md-push-3 col-md-6">
+        <div class="offset-md-3 col-md-6">
             <section class="roomList">
                 <h3>Room List 
                     <div class="room-options">
-                        <button (click)="refreshRoomList()" class="btn btn-default refresh">Refresh</button>
-                        <button class="btn btn-default" routerLink="/lobby/create">Create</button>
+                        <button (click)="refreshRoomList()" class="btn btn-secondary refresh">Refresh</button>
+                        <button class="btn btn-secondary" routerLink="/lobby/create">Create</button>
                     </div>
                 </h3>
                 <article *ngFor="let room of roomList">
                     <a routerLink="/room/{{room.id}}">
                         <div class="room-listing">
                             <div class="row">
-                                <div class="col-xs-6 room-name">{{room.name}}</div>
-                                <div class="col-xs-6 room-viewer-count">{{room.user_count}} watching</div>
+                                <div class="col-6 room-name">{{room.name}}</div>
+                                <div class="col-6 room-viewer-count">{{room.user_count}} watching</div>
                             </div>
                         </div>
                     </a>
