@@ -63,7 +63,7 @@
                     <li class="nav-item"><a class="nav-link" (click)="switchTab('users')">Users</a></li>
                 </ul>
                 <div *ngFor="let entry of history | async">
-                    <div class="div-entry">{{entry.url}}</div>
+                    <div class="div-entry" (click)="loadHistory(entry.url)">{{entry.url}}</div>
                 </div>
             </div>
             <div *ngIf="tab == 'users'">

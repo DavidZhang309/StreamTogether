@@ -62,7 +62,7 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
         //TEMP: hacking timeout in to wait for the stupid video element to load in
         let videoOp = () => {
-            if (urlChanged) {
+            if (urlChanged) {this.stream = this.liveStream; //merge back to live
                 console.log("url changed");
                 this.videoPlayerQuery.first.nativeElement.load();
             }
@@ -135,7 +135,17 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     public streamUrl() {
         if (this.url.length == 0) { return }
-        this.roomSvc.stream(this.url);
+        if (this.inSync) {
+            this.roomSvc.stream(this.url);
+        } else {
+            let element = this.videoPlayerQuery.first.nativeElement;
+            element.load();
+            element.play();
+        }
+    }
+    public loadHistory(url: string) {
+        this.url = url;
+        this.streamUrl();
     }
     public playStream(currentTime: number) {
         if (this.syncing) { return; }
