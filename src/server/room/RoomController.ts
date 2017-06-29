@@ -109,8 +109,12 @@ export class RoomController {
             user.inSync = sync == true; //coerce to boolean
         });
 
+        socket.on('state', (ackFn) => {
+            ackFn({ result: this.getClientSyncData(user) });
+        })
+
         //control events
-        socket.on('stream', (url) => {
+        socket.on('stream', (url, ackFn) => {
             if (!this.canUserControlStream(user)) { 
                 ackFn({ error: 'You cannot control the live stream.' }); 
                 return 
@@ -127,7 +131,7 @@ export class RoomController {
             this.streamHistory.push(this.currentStreamInfo.currentStream);
             this.getRoom().emit('stream', { result: this.currentStreamInfo });
         });
-        socket.on('play', (offset, time) => {
+        socket.on('play', (offset, time, ackFn) => {
             if (!this.canUserControlStream(user)) { 
                 ackFn({ error: 'You cannot control the live stream.' }); 
                 return 
@@ -143,7 +147,7 @@ export class RoomController {
                 }
             });
         });
-        socket.on('pause', (offset, time) => {
+        socket.on('pause', (offset, time, ackFn) => {
             if (!this.canUserControlStream(user)) { 
                 ackFn({ error: 'You cannot control the live stream.' }); 
                 return 
@@ -159,7 +163,7 @@ export class RoomController {
                 }
             });
         });
-        socket.on('seek', (offset, time) => {
+        socket.on('seek', (offset, time, ackFn) => {
             if (!this.canUserControlStream(user)) { 
                 ackFn({ error: 'You cannot control the live stream.' }); 
                 return 
@@ -176,9 +180,7 @@ export class RoomController {
         })
 
         // sync room
-        ackFn({
-            result: this.getClientSyncData(user)
-        });
+        ackFn({ });
     }
 
     public clientLeave(socket) {
