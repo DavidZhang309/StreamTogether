@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { LobbyService } from './lobby.service';
+import { UserService } from '../user/user.service';
 import { RoomArgs } from '../room/room';
 
 @Component({
@@ -14,12 +15,23 @@ import { RoomArgs } from '../room/room';
 export class RoomFormComponent {
     room = new RoomArgs();
 
-    public constructor(private lobbySvc: LobbyService, private router: Router) { }
+    public constructor(
+        private router: Router,
+        private lobbySvc: LobbyService, 
+        private userSvc: UserService
+    ) { }
 
     createRoom() {
         this.lobbySvc.createRoom(this.room).then((roomInfo) => {
-            // console.log(roomInfo);
-            this.router.navigateByUrl('/room/' + roomInfo.id);
+            this.lobbySvc.joinRoom({
+                id: roomInfo.id,
+                name: this.userSvc.getName(),
+                password: this.room.password
+            }).then(() => {
+                this.router.navigateByUrl('/room/' + roomInfo.id);
+            }).catch((err) => {
+                console.log(err);
+            });
         });
     }
 }
