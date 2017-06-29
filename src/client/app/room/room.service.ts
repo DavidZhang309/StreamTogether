@@ -1,3 +1,4 @@
+import { SocketService, ISocketResponse, SocketState } from '../socket.service';
 import { RoomInfo } from './room';
 
 import * as io from 'socket.io-client';
@@ -30,8 +31,8 @@ export class RoomService {
         inSync: boolean
     };
 
-    public constructor() {
-        this.socket = io.connect('/rooms');
+    public constructor(private socketSvc: SocketService) {
+        this.socket = socketSvc.getSocket();
         this.stateSubjects = {
             users: new BehaviorSubject([]),
             history: new BehaviorSubject([]),
@@ -49,6 +50,22 @@ export class RoomService {
             hasControl: false,
             inSync: true
         }
+
+        this.socket.on('text', (response: ISocketResponse) => {
+            this.stateData.chat.push(response.result);
+            this.stateSubjects.chat.next(this.stateData.chat);
+        });
+        this.socket.on('users', (response: ISocketResponse) => {
+            this.stateSubjects.users.next(response.result);
+        });
+        this.socket.on('stream', (response: ISocketResponse) => {
+            this.stateData.history.push(response.result.currentStream);
+            this.stateSubjects.history.next(this.stateData.history);
+            this.stateSubjects.stream.next(response.result);
+        });
+        this.socket.on('streamEvent', (response: ISocketResponse) => {
+            this.stateSubjects.streamEvents.next(response.result);
+        })
     }
 
     public getChat(): Observable<IChatEntry[]> {
@@ -79,10 +96,12 @@ export class RoomService {
         return this.stateSubjects.hasControl.asObservable();
     }
 
-    
-    public enterRoom(info: JoinInfo): Promise<ISyncData> {
+    public isConnected() {
+        return this.socketSvc.getState() == SocketState.Room;
+    }
+    public syncRoom() {
         return new Promise<ISyncData>((resolve, reject) => {
-            this.socket.emit('join', info, (response: ISocketResponse) => {
+            this.socket.emit('state', (response: ISocketResponse) => {
                 if (response.error != null) { reject(response.error) }
                 let result: ISyncData = response.result;
                 console.log(result);
@@ -101,28 +120,12 @@ export class RoomService {
                     this.stateData.stream = result.stream;
                     this.stateSubjects.stream.next(result.stream);
                 }
-
                 resolve(result);
             });
-            this.socket.on('text', (response: ISocketResponse) => {
-                this.stateData.chat.push(response.result);
-                this.stateSubjects.chat.next(this.stateData.chat);
-            });
-            this.socket.on('users', (response: ISocketResponse) => {
-                this.stateSubjects.users.next(response.result);
-            });
-            this.socket.on('stream', (response: ISocketResponse) => {
-                this.stateData.history.push(response.result.currentStream);
-                this.stateSubjects.history.next(this.stateData.history);
-                this.stateSubjects.stream.next(response.result);
-            });
-            this.socket.on('streamEvent', (response: ISocketResponse) => {
-                this.stateSubjects.streamEvents.next(response.result);
-            })
         })
     }
     public leaveRoom() {
-        this.socket.disconnect();
+        this.socketSvc.leaveRoom();
     }
     public sendChatMessage(text: string) {
         this.socket.emit('text', text);
@@ -144,11 +147,6 @@ export class RoomService {
     public seekStream(offset: number) {
         this.socket.emit('seek', offset, Date.now());
     }
-}
-
-interface ISocketResponse {
-    error: any;
-    result: any; 
 }
 
 interface JoinInfo {

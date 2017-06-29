@@ -80,13 +80,15 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     public ngOnInit() {
-        this.username = this.userSvc.getName();
-        this.router.params.subscribe((params) => {
-            this.roomSvc.enterRoom({ 
-                id: params['id'], 
-                name: this.username == null ? 'Angular client' : this.username
+        this.username = this.userSvc.getName(); 
+        if (this.roomSvc.isConnected()) {
+            console.log('syncing room')
+            this.roomSvc.syncRoom().then((data) => {
+                console.log(data);   
+            }).catch((err) => {
+                console.log(err);  
             });
-        });
+        }
     }
 
     public ngAfterViewInit() {
