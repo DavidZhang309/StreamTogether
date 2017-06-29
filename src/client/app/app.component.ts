@@ -1,10 +1,11 @@
+import { SocketService } from './socket.service';
 import { UserService } from './user/user.service';
 
 import { Component } from '@angular/core';
 import { Router } from "@angular/router";
 
 @Component({
-    providers: [ UserService ],
+    providers: [ UserService, SocketService ],
     selector: 'my-app',
     templateUrl: '/components/app.html'
 })
