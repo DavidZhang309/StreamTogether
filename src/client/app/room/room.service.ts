@@ -1,4 +1,4 @@
-import { SocketService, ISocketResponse, SocketState } from '../socket.service';
+import { SocketService, ISocketResponse, IJoinRoomArgs, SocketState } from '../socket.service';
 import { RoomInfo } from './room';
 
 import * as io from 'socket.io-client';
@@ -123,6 +123,9 @@ export class RoomService {
                 resolve(result);
             });
         })
+    }
+    public joinRoom(joinArgs: IJoinRoomArgs) {
+        return this.socketSvc.joinRoom(joinArgs);
     }
     public leaveRoom() {
         this.socketSvc.leaveRoom();

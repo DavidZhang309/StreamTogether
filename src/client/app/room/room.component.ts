@@ -1,7 +1,7 @@
 import { RoomService, IChatEntry, IStreamItem, IStreamStatus } from './room.service';
 import { UserService } from '../user/user.service';
 import { ViewChildren, QueryList, ElementRef, Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -35,7 +35,12 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
 
     syncing: boolean;
 
-    public constructor(private router: ActivatedRoute, private roomSvc: RoomService, private userSvc: UserService) { 
+    public constructor(
+        private route: ActivatedRoute, 
+        private router: Router,
+        private roomSvc: RoomService, 
+        private userSvc: UserService
+    ) { 
         this.inSync = true;
         this.url = '';
         this.streamTime = 0;
@@ -79,15 +84,33 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
         }, 64)
     }
 
-    public ngOnInit() {
-        this.username = this.userSvc.getName(); 
-        if (this.roomSvc.isConnected()) {
-            console.log('syncing room')
-            this.roomSvc.syncRoom().then((data) => {
-                console.log(data);   
+    private joinRoom() {
+        let username = this.userSvc.getName(); 
+        this.route.params.subscribe((params) => {
+            this.roomSvc.joinRoom({
+                id: params['id'],
+                name: username
+            }).then(() => {
+                this.syncRoom();
             }).catch((err) => {
-                console.log(err);  
+                console.log(err);
+                this.router.navigateByUrl('/lobby');
             });
+        });
+    }
+    private syncRoom() {
+        this.roomSvc.syncRoom().then((data) => {
+            console.log(data);   
+        }).catch((err) => {
+            console.log(err);  
+            this.router.navigateByUrl('/lobby');
+        });
+    }
+    public ngOnInit() {
+        if (this.roomSvc.isConnected()) {
+            this.syncRoom();
+        } else {
+            this.joinRoom();
         }
     }
 
@@ -124,7 +147,9 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     public ngOnDestroy() {
-        this.roomSvc.leaveRoom();
+        if (this.roomSvc.isConnected()) {
+            this.roomSvc.leaveRoom();
+        }
     }
 
     public switchTab(tab: string) {
