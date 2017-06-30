@@ -1,5 +1,9 @@
 import { RoomDataService, IRoomInfo } from '../services/RoomDataService';
 
+import * as http from 'http';
+import * as https from 'https';
+import * as urllib from 'url';
+
 export class RoomController {
     service = new RoomDataService();
     users: { [name: string]: IUserInfo } = { };
@@ -20,6 +24,36 @@ export class RoomController {
             if (socket.id == this.users[names[i]].socket.id) { return this.users[names[i]] }
         }
         return undefined;
+    }
+
+    private getHttpStreamType(url: string): Promise<string> {
+        let ACCEPTED_MIME = ['image', 'audio', 'video'];
+        let urlObj = urllib.parse(url);
+        let adapters = {
+            http: http,
+            https: https
+        };
+        return new Promise<string>((resolve, reject) => {
+            let request = adapters[urlObj.protocol].http.request({
+                method: 'HEAD',
+                host: urlObj.host,
+                port: urlObj.port,
+                path: urlObj.path
+            }, (response) => {
+                let buffer = [];
+                response.on('data', (chunk) => {
+                    buffer.push(chunk);
+                });
+                response.on('end', () => {
+                    console.log(buffer.join(''));
+                    resolve(ACCEPTED_MIME[0]);
+                })
+            });
+            request.on('error', (err) => {
+                console.log(err);
+                reject(err);
+            })
+        })
     }
  
     /**
