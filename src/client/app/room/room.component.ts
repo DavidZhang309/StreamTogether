@@ -1,5 +1,7 @@
-import { RoomService, IChatEntry, IStreamItem, IStreamStatus } from './room.service';
+import { IChatEntry, IStreamItem, IStreamStatus } from '../../../common/interface/stream';
+import { RoomService } from './room.service';
 import { UserService } from '../user/user.service';
+
 import { ViewChildren, QueryList, ElementRef, Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -58,6 +60,11 @@ export class RoomComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     private syncPlayer() {
+        // No stream to sync to
+        if (this.liveStream == null) { 
+            return; 
+        }
+
         let urlChanged = this.liveStream.currentStream.url != this.stream.currentStream.url;
         this.stream = this.liveStream; //merge back to live
 

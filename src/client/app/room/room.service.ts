@@ -1,3 +1,4 @@
+import { IChatEntry, IStreamItem, IStreamStatus, IStreamEvent, IClientState } from '../../../common/interface/stream';
 import { SocketService, ISocketResponse, IJoinRoomArgs, SocketState } from '../socket.service';
 import { RoomInfo } from './room';
 
@@ -100,10 +101,10 @@ export class RoomService {
         return this.socketSvc.getState() == SocketState.Room;
     }
     public syncRoom() {
-        return new Promise<ISyncData>((resolve, reject) => {
+        return new Promise<IClientState>((resolve, reject) => {
             this.socket.emit('state', (response: ISocketResponse) => {
                 if (response.error != null) { reject(response.error) }
-                let result: ISyncData = response.result;
+                let result: IClientState = response.result;
                 console.log(result);
                 this.stateData.chat = result.chat;
                 this.stateSubjects.chat.next(this.stateData.chat);
@@ -155,33 +156,4 @@ export class RoomService {
 interface JoinInfo {
     id: string,
     name: string
-}
-
-interface ISyncData {
-    chat: IChatEntry[];
-    history: IStreamItem[];
-    users: string[];
-    stream: IStreamStatus;
-    hasControl: boolean;
-}
-
-export interface IChatEntry {
-    user: string,
-    message: string;
-    time: string;
-}
-export interface IStreamItem {
-    url: string;
-}
-export interface IStreamStatus {
-    currentStream: IStreamItem;
-    isPlaying: boolean;
-    lastPlay: number;
-    lastPlayTime: number;
-}
-
-export interface IStreamEvent {
-    user: string,
-    event: string,
-    stream: IStreamStatus
 }
